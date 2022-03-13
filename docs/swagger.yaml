@@ -1,0 +1,719 @@
+definitions:
+  model.Access:
+    properties:
+      access:
+        type: string
+      account:
+        description: natural client
+        type: string
+      ip_address:
+        type: string
+      service_number:
+        type: string
+    type: object
+  model.AdditionalProperty:
+    properties:
+      code:
+        type: string
+      value:
+        type: string
+    type: object
+  model.Contact:
+    properties:
+      email:
+        type: string
+      firstname:
+        type: string
+      lastname:
+        type: string
+      phone:
+        type: string
+      type:
+        type: string
+    type: object
+  model.DedicatedServer:
+    properties:
+      access:
+        $ref: '#/definitions/model.Access'
+        type: object
+      contacts:
+        items:
+          $ref: '#/definitions/model.Contact'
+        type: array
+      server_name:
+        type: string
+      sla:
+        type: boolean
+    type: object
+  model.Event:
+    properties:
+      date:
+        type: integer
+      description:
+        type: string
+      type:
+        type: string
+    type: object
+  model.HouseLeasing:
+    properties:
+      access:
+        $ref: '#/definitions/model.Access'
+        type: object
+      contacts:
+        items:
+          $ref: '#/definitions/model.Contact'
+        type: array
+      server_name:
+        type: string
+      sla:
+        type: boolean
+    type: object
+  model.Order:
+    properties:
+      category:
+        type: string
+      created_at:
+        description: timestamp
+        type: integer
+      customer_type:
+        type: string
+      dedicated_server:
+        $ref: '#/definitions/model.DedicatedServer'
+        type: object
+      events:
+        items:
+          $ref: '#/definitions/model.Event'
+        type: array
+      external_id:
+        type: string
+      house_leasing:
+        $ref: '#/definitions/model.HouseLeasing'
+        type: object
+      id:
+        type: string
+      source:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updated_at:
+        description: timestamp
+        type: integer
+      virtual_data_center:
+        $ref: '#/definitions/model.VirtualDataCenter'
+        type: object
+      vps:
+        $ref: '#/definitions/model.VPS'
+        type: object
+      web_hosting:
+        $ref: '#/definitions/model.WebHosting'
+        type: object
+    type: object
+  model.OrderInfo:
+    properties:
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      createDate:
+        $ref: '#/definitions/model.ServiceOrderDateTime'
+        type: object
+      custType:
+        type: string
+      orderBusiType:
+        type: string
+      orderId:
+        type: string
+    type: object
+  model.ServiceOrderAccessInfo:
+    properties:
+      accessAcount:
+        type: string
+      accessId:
+        type: string
+      accessType:
+        type: string
+      actionType:
+        type: string
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      ipAddress:
+        type: string
+      serviceNumber:
+        type: string
+    type: object
+  model.ServiceOrderAliasInfo:
+    properties:
+      actionType:
+        type: string
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      aliasId:
+        type: string
+      aliasName:
+        type: string
+    type: object
+  model.ServiceOrderDateTime:
+    $ref: '#/definitions/time.Time'
+  model.ServiceOrderDedicatedServer:
+    properties:
+      accessInfo:
+        $ref: '#/definitions/model.ServiceOrderAccessInfo'
+        type: object
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      responsible:
+        items:
+          $ref: '#/definitions/model.ServiceOrderResponsible'
+        type: array
+      serverName:
+        type: string
+      slaFlag:
+        type: boolean
+    type: object
+  model.ServiceOrderFTPInfo:
+    properties:
+      actionType:
+        type: string
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      ftpAccount:
+        type: string
+      ftpId:
+        type: string
+    type: object
+  model.ServiceOrderHousingLeasing:
+    properties:
+      accessInfo:
+        $ref: '#/definitions/model.ServiceOrderAccessInfo'
+        type: object
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      responsible:
+        items:
+          $ref: '#/definitions/model.ServiceOrderResponsible'
+        type: array
+      serverName:
+        type: string
+      slaFlag:
+        type: boolean
+    type: object
+  model.ServiceOrderName:
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+      middleName:
+        type: string
+    type: object
+  model.ServiceOrderOfferInst:
+    properties:
+      actionType:
+        type: string
+      attrCode:
+        type: string
+      attrNewValue:
+        type: string
+      attrOldValue:
+        type: string
+    type: object
+  model.ServiceOrderOffering:
+    properties:
+      actionType:
+        type: string
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      effectiveTime:
+        $ref: '#/definitions/model.ServiceOrderDateTime'
+        type: object
+      expirationTime:
+        $ref: '#/definitions/model.ServiceOrderDateTime'
+        type: object
+      offerInstAttr:
+        items:
+          $ref: '#/definitions/model.ServiceOrderOfferInst'
+        type: array
+      offeringID:
+        type: string
+      offeringName:
+        type: string
+      offeringType:
+        type: string
+    type: object
+  model.ServiceOrderRequest:
+    properties:
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      offeringInfo:
+        items:
+          $ref: '#/definitions/model.ServiceOrderOffering'
+        type: array
+      orderInfo:
+        $ref: '#/definitions/model.OrderInfo'
+        type: object
+      subInfo:
+        $ref: '#/definitions/model.SubscriberInfo'
+        type: object
+    type: object
+  model.ServiceOrderResponse:
+    properties:
+      id:
+        type: string
+      transaction:
+        type: string
+    type: object
+  model.ServiceOrderResponsible:
+    properties:
+      actionType:
+        type: string
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      email:
+        type: string
+      fullName:
+        type: string
+      phone:
+        type: string
+      responsibleId:
+        type: string
+      responsibleType:
+        type: string
+    type: object
+  model.ServiceOrderVPS:
+    properties:
+      accessInfo:
+        $ref: '#/definitions/model.ServiceOrderAccessInfo'
+        type: object
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      forumFlag:
+        type: boolean
+      responsible:
+        items:
+          $ref: '#/definitions/model.ServiceOrderResponsible'
+        type: array
+      serverName:
+        type: string
+      slaFlag:
+        type: boolean
+    type: object
+  model.ServiceOrderVirtualDataCenter:
+    properties:
+      accessInfo:
+        $ref: '#/definitions/model.ServiceOrderAccessInfo'
+        type: object
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      responsible:
+        items:
+          $ref: '#/definitions/model.ServiceOrderResponsible'
+        type: array
+      serverName:
+        type: string
+      slaFlag:
+        type: boolean
+    type: object
+  model.ServiceOrderWebHosting:
+    properties:
+      accessInfo:
+        items:
+          $ref: '#/definitions/model.ServiceOrderAccessInfo'
+        type: array
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      advertisemtFlag:
+        type: string
+      alias:
+        items:
+          $ref: '#/definitions/model.ServiceOrderAliasInfo'
+        type: array
+      cmfVersion:
+        type: string
+      cmsName:
+        type: string
+      dataBase:
+        type: string
+      frameWorkName:
+        type: string
+      ftpInfo:
+        items:
+          $ref: '#/definitions/model.ServiceOrderFTPInfo'
+        type: array
+      lmsVersion:
+        type: string
+      mainDomain:
+        type: string
+      programmingLanguage:
+        type: string
+      remark:
+        type: string
+      responsible:
+        items:
+          $ref: '#/definitions/model.ServiceOrderResponsible'
+        type: array
+      topicsToDiscuss:
+        type: string
+      webSiteType:
+        type: string
+      websiteGoal:
+        type: string
+    type: object
+  model.SubscriberInfo:
+    properties:
+      additionalProperty:
+        items:
+          $ref: '#/definitions/model.AdditionalProperty'
+        type: array
+      dedicatedServer:
+        $ref: '#/definitions/model.ServiceOrderDedicatedServer'
+        type: object
+      housingLeasing:
+        $ref: '#/definitions/model.ServiceOrderHousingLeasing'
+        type: object
+      initialDate:
+        type: string
+      networkType:
+        type: string
+      provisionServiceType:
+        type: string
+      serviceNumber:
+        type: string
+      subId:
+        type: string
+      subName:
+        $ref: '#/definitions/model.ServiceOrderName'
+        type: object
+      virtualDataCenter:
+        $ref: '#/definitions/model.ServiceOrderVirtualDataCenter'
+        type: object
+      vps:
+        $ref: '#/definitions/model.ServiceOrderVPS'
+        type: object
+      webHosting:
+        $ref: '#/definitions/model.ServiceOrderWebHosting'
+        type: object
+    type: object
+  model.UpdateOrderRequest:
+    properties:
+      description:
+        type: string
+      status:
+        type: string
+    type: object
+  model.VPS:
+    properties:
+      access:
+        $ref: '#/definitions/model.Access'
+        type: object
+      contacts:
+        items:
+          $ref: '#/definitions/model.Contact'
+        type: array
+      forum:
+        type: boolean
+      server_name:
+        type: string
+      sla:
+        type: boolean
+    type: object
+  model.VirtualDataCenter:
+    properties:
+      access:
+        $ref: '#/definitions/model.Access'
+        type: object
+      contacts:
+        items:
+          $ref: '#/definitions/model.Contact'
+        type: array
+      server_name:
+        type: string
+      sla:
+        type: boolean
+    type: object
+  model.WebHosting:
+    properties:
+      access:
+        items:
+          $ref: '#/definitions/model.Access'
+        type: array
+      advertising:
+        type: boolean
+      alias:
+        items:
+          type: string
+        type: array
+      cmf:
+        type: string
+      cms:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/model.Contact'
+        type: array
+      database:
+        type: string
+      domain:
+        type: string
+      framework:
+        type: string
+      ftp_accounts:
+        items:
+          type: string
+        type: array
+      lms:
+        type: string
+      programming_language:
+        type: string
+      remark:
+        type: string
+      topic:
+        type: string
+      website_goal:
+        type: string
+      website_type:
+        type: string
+    type: object
+info:
+  contact:
+    email: sebastian.rodriguez@etecsa.cu
+    name: Sebastian Rodriguez Mendez
+  license: {}
+paths:
+  /health-check/:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - HealthCheck
+  /v1/:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: client id
+        in: header
+        name: x-client-id
+        required: true
+        type: string
+      - description: subscriber status
+        in: query
+        name: status
+        type: string
+      - description: category
+        in: query
+        name: category
+        type: string
+      - description: order type
+        in: query
+        name: order_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Order'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            type: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: Server
+      tags:
+      - Search Orders
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: client id
+        in: header
+        name: x-client-id
+        required: true
+        type: string
+      - description: Order
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.Order'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Order'
+        "400":
+          description: Bad Request
+          schema:
+            type: Incorrect
+        "401":
+          description: Unauthorized
+          schema:
+            type: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: Server
+      summary: Create Order from Web Portal
+      tags:
+      - Create Order
+  /v1/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: client id
+        in: header
+        name: x-client-id
+        required: true
+        type: string
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Order'
+        "401":
+          description: Unauthorized
+          schema:
+            type: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            type: Order
+        "500":
+          description: Internal Server Error
+          schema:
+            type: Server
+      tags:
+      - Get Order
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: client id
+        in: header
+        name: x-client-id
+        required: true
+        type: string
+      - description: Order
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateOrderRequest'
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Order'
+        "400":
+          description: Bad Request
+          schema:
+            type: Incorrect
+        "401":
+          description: Unauthorized
+          schema:
+            type: Unauthorized
+        "404":
+          description: Not Found
+          schema:
+            type: Order
+        "500":
+          description: Internal Server Error
+          schema:
+            type: Server
+      summary: Update Provision Order Status
+      tags:
+      - Update Order
+  /v1/service:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: client id
+        in: header
+        name: x-client-id
+        required: true
+        type: string
+      - description: transaction id
+        in: query
+        name: transaction_id
+        required: true
+        type: string
+      - description: Order
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.ServiceOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ServiceOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: Incorrect
+        "401":
+          description: Unauthorized
+          schema:
+            type: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: Server
+      summary: Create Service Order from commercial system
+      tags:
+      - Create Service Order
+swagger: "2.0"

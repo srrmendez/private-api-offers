@@ -1,0 +1,13 @@
+---
+app:
+  appPath: /orders
+  port: 8000
+  logAddress: /var/log/interface/api-orders/trace.log
+  #logAddress: ./trace.log
+
+database:
+  host: 127.0.0.1
+  port: 27017
+  database: operations
+  table: operations
+
