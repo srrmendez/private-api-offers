@@ -8,11 +8,8 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/srrmendez/private-api-order/conf"
-	"github.com/srrmendez/private-api-order/docs"
-	pkgRepository "github.com/srrmendez/private-api-order/repository"
-	orderService "github.com/srrmendez/private-api-order/service/order"
-	pkgValidator "github.com/srrmendez/private-api-order/utils/validator"
+	"github.com/srrmendez/private-api-offers/conf"
+	"github.com/srrmendez/private-api-offers/docs"
 	pkgHttp "github.com/srrmendez/services-interface-tools/pkg/http"
 	log "github.com/srrmendez/services-interface-tools/pkg/logger"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -21,20 +18,14 @@ import (
 )
 
 type Env struct {
-	Services struct {
-		orderService orderService.Order
-	}
-	Validators struct {
-		orderRequestValidator *pkgValidator.OrderRequestValidator
-	}
 }
 
 var env Env
 
 func Init() {
 	// Swagger doc
-	docs.SwaggerInfo.Title = "Private order API"
-	docs.SwaggerInfo.Description = "Private order api for ETECSA."
+	docs.SwaggerInfo.Title = "Private offers API"
+	docs.SwaggerInfo.Description = "Private offers api for ETECSA."
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.BasePath = conf.GetProps().App.Path
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
@@ -63,18 +54,7 @@ func Init() {
 
 	defer mongoClient.Disconnect(ctx)
 
-	repository := pkgRepository.NewRepository(mongoClient, conf.GetProps().Database.Database, conf.GetProps().Database.Table)
-
-	env = Env{
-		Services: struct{ orderService orderService.Order }{
-			orderService: orderService.NewService(repository, lg),
-		},
-		Validators: struct {
-			orderRequestValidator *pkgValidator.OrderRequestValidator
-		}{
-			orderRequestValidator: pkgValidator.NewOrderRequestValidator(),
-		},
-	}
+	env = Env{}
 
 	// Creating http logger
 	l := log.NewLogger(log.Config{

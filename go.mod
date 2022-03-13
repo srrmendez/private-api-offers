@@ -1,4 +1,4 @@
-module github.com/srrmendez/private-api-order
+module github.com/srrmendez/private-api-offers
 
 go 1.16
 

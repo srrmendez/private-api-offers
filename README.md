@@ -1,6 +1,6 @@
-# private api data center
+# private api offers
 
-Private api datacenter server
+Private api offers server
 
 ## Content table
 
