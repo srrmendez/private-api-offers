@@ -5,8 +5,8 @@ type ClientType string
 type PayModeType string
 
 const (
-	IndividualClienType  string = "INDIVIDUAL"
-	CorporativeClienType string = "CORPORATIVE"
+	IndividualClienType  ClientType = "INDIVIDUAL"
+	CorporativeClienType ClientType = "CORPORATIVE"
 
 	PrepaidPayMode  PayModeType = "PREPAID"
 	PostpaidPayMode PayModeType = "POSTPAID"
