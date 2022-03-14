@@ -10,6 +10,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/srrmendez/private-api-offers/conf"
 	"github.com/srrmendez/private-api-offers/docs"
+	"github.com/srrmendez/private-api-offers/repository"
+	"github.com/srrmendez/private-api-offers/service"
 	pkgHttp "github.com/srrmendez/services-interface-tools/pkg/http"
 	log "github.com/srrmendez/services-interface-tools/pkg/logger"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -18,6 +20,7 @@ import (
 )
 
 type Env struct {
+	offerService service.OfferService
 }
 
 var env Env
@@ -54,7 +57,12 @@ func Init() {
 
 	defer mongoClient.Disconnect(ctx)
 
-	env = Env{}
+	offerRepository := repository.NewRepository(mongoClient, conf.GetProps().Database.Database,
+		conf.GetProps().Database.Table)
+
+	env = Env{
+		offerService: service.NewService(offerRepository, lg),
+	}
 
 	// Creating http logger
 	l := log.NewLogger(log.Config{

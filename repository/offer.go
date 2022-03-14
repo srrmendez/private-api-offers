@@ -175,3 +175,20 @@ func (r *repository) Search(ctx context.Context, active bool) ([]model.Offer, er
 
 	return offers, nil
 }
+
+func (r *repository) Remove(ctx context.Context, ids []string) error {
+	query := bson.D{
+		{"_id", bson.D{{"$in", ids}}},
+	}
+
+	d, err := r.collection.DeleteMany(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	if d.DeletedCount == 0 {
+		return errors.New("ids to remove not found")
+	}
+
+	return nil
+}

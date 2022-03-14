@@ -33,7 +33,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Search Orders"
+                    "Search Offers"
                 ],
                 "parameters": [
                     {
@@ -44,21 +44,9 @@
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "subscriber status",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "category",
-                        "name": "category",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "order type",
-                        "name": "order_type",
+                        "type": "boolean",
+                        "description": "offers status",
+                        "name": "active",
                         "in": "query"
                     }
                 ],
@@ -68,7 +56,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.Order"
+                                "$ref": "#/definitions/model.Offer"
                             }
                         }
                     },
@@ -94,9 +82,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Create Order"
+                    "Create Offers Order"
                 ],
-                "summary": "Create Order from Web Portal",
+                "summary": "Create Offers from commercial system",
                 "parameters": [
                     {
                         "type": "string",
@@ -106,87 +94,17 @@
                         "required": true
                     },
                     {
-                        "description": "Order",
+                        "description": "offers to sync",
                         "name": "req",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.Order"
+                            "$ref": "#/definitions/model.BssSyncOfferRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/model.Order"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "Incorrect"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "Unauthorized"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "Server"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/service": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Create Service Order"
-                ],
-                "summary": "Create Service Order from commercial system",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "client id",
-                        "name": "x-client-id",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "transaction id",
-                        "name": "transaction_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "description": "Order",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.ServiceOrderRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.ServiceOrderResponse"
-                        }
-                    },
+                    "201": {},
                     "400": {
                         "description": "Bad Request",
                         "schema": {
@@ -217,7 +135,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Get Order"
+                    "Get Offer"
                 ],
                 "parameters": [
                     {
@@ -239,7 +157,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Order"
+                            "$ref": "#/definitions/model.Offer"
                         }
                     },
                     "401": {
@@ -251,76 +169,7 @@
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "type": "Order"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "Server"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Update Order"
-                ],
-                "summary": "Update Provision Order Status",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "client id",
-                        "name": "x-client-id",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Order",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.UpdateOrderRequest"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/model.Order"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "Incorrect"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "Unauthorized"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "Order"
+                            "type": "Offer"
                         }
                     },
                     "500": {
@@ -334,750 +183,215 @@
         }
     },
     "definitions": {
-        "model.Access": {
+        "model.BSSDateTime": {
+            "$ref": "#/definitions/time.Time"
+        },
+        "model.BssAttached": {
             "type": "object",
             "properties": {
-                "access": {
+                "offeringID": {
                     "type": "string"
                 },
-                "account": {
-                    "description": "natural client",
-                    "type": "string"
-                },
-                "ip_address": {
-                    "type": "string"
-                },
-                "service_number": {
+                "releationType": {
                     "type": "string"
                 }
             }
         },
-        "model.AdditionalProperty": {
+        "model.BssAttribute": {
             "type": "object",
             "properties": {
-                "code": {
+                "attr_code": {
                     "type": "string"
                 },
-                "value": {
+                "attr_type": {
+                    "type": "string"
+                },
+                "attr_value": {
+                    "type": "string"
+                },
+                "attr_value_desc": {
                     "type": "string"
                 }
             }
         },
-        "model.Contact": {
+        "model.BssAttributeList": {
             "type": "object",
             "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "firstname": {
-                    "type": "string"
-                },
-                "lastname": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.DedicatedServer": {
-            "type": "object",
-            "properties": {
-                "access": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.Access"
-                },
-                "contacts": {
+                "attr": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Contact"
+                        "$ref": "#/definitions/model.BssAttribute"
                     }
-                },
-                "server_name": {
-                    "type": "string"
-                },
-                "sla": {
-                    "type": "boolean"
                 }
             }
         },
-        "model.Event": {
+        "model.BssCatalog": {
             "type": "object",
             "properties": {
-                "date": {
-                    "type": "integer"
-                },
-                "description": {
+                "catalog_id": {
                     "type": "string"
                 },
-                "type": {
+                "catalog_name": {
                     "type": "string"
                 }
             }
         },
-        "model.HouseLeasing": {
+        "model.BssCatalogList": {
             "type": "object",
             "properties": {
-                "access": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.Access"
-                },
-                "contacts": {
+                "catalog": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Contact"
+                        "$ref": "#/definitions/model.BssCatalog"
                     }
-                },
-                "server_name": {
-                    "type": "string"
-                },
-                "sla": {
-                    "type": "boolean"
                 }
             }
         },
-        "model.Order": {
+        "model.BssOffer": {
+            "type": "object",
+            "properties": {
+                "attrList": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.BssAttributeList"
+                },
+                "bundle_flag": {
+                    "type": "string"
+                },
+                "catalogList": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.BssCatalogList"
+                },
+                "eff_date": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.BSSDateTime"
+                },
+                "exp_date": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.BSSDateTime"
+                },
+                "monthly_fee": {
+                    "type": "number"
+                },
+                "offer_cata": {
+                    "type": "string"
+                },
+                "offer_code": {
+                    "type": "string"
+                },
+                "offer_desc": {
+                    "type": "string"
+                },
+                "offer_id": {
+                    "type": "string"
+                },
+                "offer_name": {
+                    "type": "string"
+                },
+                "offer_type": {
+                    "type": "string"
+                },
+                "on_sale": {
+                    "type": "string"
+                },
+                "oneoff_fee": {
+                    "type": "number"
+                },
+                "pay_mode": {
+                    "type": "string"
+                },
+                "primary_flag": {
+                    "type": "string"
+                },
+                "relationshipList": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.BssRelationshipList"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "topupFee": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.BssRelationshipList": {
+            "type": "object",
+            "properties": {
+                "attached": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.BssAttached"
+                    }
+                }
+            }
+        },
+        "model.BssSyncOfferRequest": {
+            "type": "object",
+            "properties": {
+                "syncOffers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.BssOffer"
+                    }
+                }
+            }
+        },
+        "model.Offer": {
             "type": "object",
             "properties": {
                 "category": {
                     "type": "string"
                 },
-                "created_at": {
-                    "description": "timestamp",
-                    "type": "integer"
-                },
-                "customer_type": {
-                    "type": "string"
-                },
-                "dedicated_server": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.DedicatedServer"
-                },
-                "events": {
+                "childrens": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.Event"
+                        "$ref": "#/definitions/model.Offer"
                     }
+                },
+                "client_type": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "expiration_date": {
+                    "type": "integer"
                 },
                 "external_id": {
                     "type": "string"
                 },
-                "house_leasing": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.HouseLeasing"
-                },
                 "id": {
                     "type": "string"
                 },
-                "source": {
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "monthly_fee": {
+                    "type": "number"
+                },
+                "name": {
                     "type": "string"
                 },
-                "status": {
+                "one_of_fee": {
+                    "type": "number"
+                },
+                "pay_mode": {
                     "type": "string"
                 },
-                "type": {
-                    "type": "string"
+                "standalone": {
+                    "type": "boolean"
                 },
                 "updated_at": {
-                    "description": "timestamp",
                     "type": "integer"
-                },
-                "virtual_data_center": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.VirtualDataCenter"
-                },
-                "vps": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.VPS"
-                },
-                "web_hosting": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.WebHosting"
-                }
-            }
-        },
-        "model.OrderInfo": {
-            "type": "object",
-            "properties": {
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "createDate": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderDateTime"
-                },
-                "custType": {
-                    "type": "string"
-                },
-                "orderBusiType": {
-                    "type": "string"
-                },
-                "orderId": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ServiceOrderAccessInfo": {
-            "type": "object",
-            "properties": {
-                "accessAcount": {
-                    "type": "string"
-                },
-                "accessId": {
-                    "type": "string"
-                },
-                "accessType": {
-                    "type": "string"
-                },
-                "actionType": {
-                    "type": "string"
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "ipAddress": {
-                    "type": "string"
-                },
-                "serviceNumber": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ServiceOrderAliasInfo": {
-            "type": "object",
-            "properties": {
-                "actionType": {
-                    "type": "string"
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "aliasId": {
-                    "type": "string"
-                },
-                "aliasName": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ServiceOrderDateTime": {
-            "$ref": "#/definitions/time.Time"
-        },
-        "model.ServiceOrderDedicatedServer": {
-            "type": "object",
-            "properties": {
-                "accessInfo": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderAccessInfo"
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "responsible": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderResponsible"
-                    }
-                },
-                "serverName": {
-                    "type": "string"
-                },
-                "slaFlag": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.ServiceOrderFTPInfo": {
-            "type": "object",
-            "properties": {
-                "actionType": {
-                    "type": "string"
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "ftpAccount": {
-                    "type": "string"
-                },
-                "ftpId": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ServiceOrderHousingLeasing": {
-            "type": "object",
-            "properties": {
-                "accessInfo": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderAccessInfo"
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "responsible": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderResponsible"
-                    }
-                },
-                "serverName": {
-                    "type": "string"
-                },
-                "slaFlag": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.ServiceOrderName": {
-            "type": "object",
-            "properties": {
-                "firstName": {
-                    "type": "string"
-                },
-                "lastName": {
-                    "type": "string"
-                },
-                "middleName": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ServiceOrderOfferInst": {
-            "type": "object",
-            "properties": {
-                "actionType": {
-                    "type": "string"
-                },
-                "attrCode": {
-                    "type": "string"
-                },
-                "attrNewValue": {
-                    "type": "string"
-                },
-                "attrOldValue": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ServiceOrderOffering": {
-            "type": "object",
-            "properties": {
-                "actionType": {
-                    "type": "string"
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "effectiveTime": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderDateTime"
-                },
-                "expirationTime": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderDateTime"
-                },
-                "offerInstAttr": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderOfferInst"
-                    }
-                },
-                "offeringID": {
-                    "type": "string"
-                },
-                "offeringName": {
-                    "type": "string"
-                },
-                "offeringType": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ServiceOrderRequest": {
-            "type": "object",
-            "properties": {
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "offeringInfo": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderOffering"
-                    }
-                },
-                "orderInfo": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.OrderInfo"
-                },
-                "subInfo": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.SubscriberInfo"
-                }
-            }
-        },
-        "model.ServiceOrderResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "transaction": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ServiceOrderResponsible": {
-            "type": "object",
-            "properties": {
-                "actionType": {
-                    "type": "string"
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "email": {
-                    "type": "string"
-                },
-                "fullName": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "responsibleId": {
-                    "type": "string"
-                },
-                "responsibleType": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ServiceOrderVPS": {
-            "type": "object",
-            "properties": {
-                "accessInfo": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderAccessInfo"
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "forumFlag": {
-                    "type": "boolean"
-                },
-                "responsible": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderResponsible"
-                    }
-                },
-                "serverName": {
-                    "type": "string"
-                },
-                "slaFlag": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.ServiceOrderVirtualDataCenter": {
-            "type": "object",
-            "properties": {
-                "accessInfo": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderAccessInfo"
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "responsible": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderResponsible"
-                    }
-                },
-                "serverName": {
-                    "type": "string"
-                },
-                "slaFlag": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.ServiceOrderWebHosting": {
-            "type": "object",
-            "properties": {
-                "accessInfo": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderAccessInfo"
-                    }
-                },
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "advertisemtFlag": {
-                    "type": "string"
-                },
-                "alias": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderAliasInfo"
-                    }
-                },
-                "cmfVersion": {
-                    "type": "string"
-                },
-                "cmsName": {
-                    "type": "string"
-                },
-                "dataBase": {
-                    "type": "string"
-                },
-                "frameWorkName": {
-                    "type": "string"
-                },
-                "ftpInfo": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderFTPInfo"
-                    }
-                },
-                "lmsVersion": {
-                    "type": "string"
-                },
-                "mainDomain": {
-                    "type": "string"
-                },
-                "programmingLanguage": {
-                    "type": "string"
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "responsible": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ServiceOrderResponsible"
-                    }
-                },
-                "topicsToDiscuss": {
-                    "type": "string"
-                },
-                "webSiteType": {
-                    "type": "string"
-                },
-                "websiteGoal": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.SubscriberInfo": {
-            "type": "object",
-            "properties": {
-                "additionalProperty": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.AdditionalProperty"
-                    }
-                },
-                "dedicatedServer": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderDedicatedServer"
-                },
-                "housingLeasing": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderHousingLeasing"
-                },
-                "initialDate": {
-                    "type": "string"
-                },
-                "networkType": {
-                    "type": "string"
-                },
-                "provisionServiceType": {
-                    "type": "string"
-                },
-                "serviceNumber": {
-                    "type": "string"
-                },
-                "subId": {
-                    "type": "string"
-                },
-                "subName": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderName"
-                },
-                "virtualDataCenter": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderVirtualDataCenter"
-                },
-                "vps": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderVPS"
-                },
-                "webHosting": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.ServiceOrderWebHosting"
-                }
-            }
-        },
-        "model.UpdateOrderRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.VPS": {
-            "type": "object",
-            "properties": {
-                "access": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.Access"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Contact"
-                    }
-                },
-                "forum": {
-                    "type": "boolean"
-                },
-                "server_name": {
-                    "type": "string"
-                },
-                "sla": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.VirtualDataCenter": {
-            "type": "object",
-            "properties": {
-                "access": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.Access"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Contact"
-                    }
-                },
-                "server_name": {
-                    "type": "string"
-                },
-                "sla": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.WebHosting": {
-            "type": "object",
-            "properties": {
-                "access": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Access"
-                    }
-                },
-                "advertising": {
-                    "type": "boolean"
-                },
-                "alias": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "cmf": {
-                    "type": "string"
-                },
-                "cms": {
-                    "type": "string"
-                },
-                "contacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.Contact"
-                    }
-                },
-                "database": {
-                    "type": "string"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "framework": {
-                    "type": "string"
-                },
-                "ftp_accounts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "lms": {
-                    "type": "string"
-                },
-                "programming_language": {
-                    "type": "string"
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "topic": {
-                    "type": "string"
-                },
-                "website_goal": {
-                    "type": "string"
-                },
-                "website_type": {
-                    "type": "string"
                 }
             }
         }

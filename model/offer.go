@@ -1,5 +1,10 @@
 package model
 
+import (
+	"encoding/json"
+	"time"
+)
+
 type CustomTimeStamp int64
 type ClientType string
 type PayModeType string
@@ -33,4 +38,12 @@ type Offer struct {
 	OneOfFee    float64           `json:"one_of_fee" bson:"one_of_fee"`
 	Childrens   []Offer           `json:"childrens,omitempty" bson:"childrens,omitempty"`
 	Metadata    map[string]string `json:"metadata,omitempty" bson:"metadata,omitempty"`
+}
+
+func (c CustomTimeStamp) MarshalJSON() ([]byte, error) {
+	tstamp := int64(c)
+
+	t := time.Unix(tstamp, 0).Format("2006-01-02 15:04:05")
+
+	return json.Marshal(t)
 }

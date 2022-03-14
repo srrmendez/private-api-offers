@@ -159,4 +159,20 @@ func TestOfferRepository(t *testing.T) {
 		assert.Equal(t, 4, len(offers))
 	})
 
+	t.Run("succssfully remove inactive offers", func(t *testing.T) {
+		t.Skip()
+		// Given
+		ctx := context.Background()
+
+		mongoClient, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+
+		repo := NewRepository(mongoClient, "service_layer", "offers")
+
+		// When
+		err := repo.Remove(ctx, []string{"60f107bf-07fd-4951-a873-9bc7d1281503", "68a9425f-ab44-40e4-96da-0437dbb5eed5"})
+
+		// Then
+		require.NoError(t, err)
+	})
+
 }

@@ -11,8 +11,8 @@ var syncProperties sync.Once
 
 func GetProps() *Properties {
 	syncProperties.Do(func() {
-		//dir := "./config/conf.yaml"
-		dir := "/var/www/api-orders/config/conf.yaml"
+		dir := "./config/conf.yaml"
+		//dir := "/var/www/api-offers/config/conf.yaml"
 
 		if err := config.LoadEnvFromYamlFile(dir, &properties); err != nil {
 			panic(err)
