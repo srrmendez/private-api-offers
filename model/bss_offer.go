@@ -1,8 +1,5 @@
 package model
 
-import "time"
-
-type BSSDateTime time.Time
 type BSSClientType string
 type BssPaymodeType string
 type BssStatus string
@@ -63,8 +60,8 @@ type BssOffer struct {
 	BundleFlag     string               `json:"bundle_flag"`
 	Name           string               `json:"offer_name"`
 	Category       string               `json:"offer_cata"`
-	EffectiveDate  BSSDateTime          `json:"eff_date"`
-	ExpirationDate BSSDateTime          `json:"exp_date"`
+	EffectiveDate  *string              `json:"eff_date"`
+	ExpirationDate *string              `json:"exp_date"`
 	Status         BssStatus            `json:"status"`
 	OneOfFee       float64              `json:"oneoff_fee"`
 	MontlyFee      float64              `json:"monthly_fee"`
@@ -80,15 +77,4 @@ type BssOffer struct {
 
 type BssSyncOfferRequest struct {
 	SyncOffers []BssOffer `json:"syncOffers"`
-}
-
-func (t *BSSDateTime) UnmarshalJSON(data []byte) error {
-	dt, err := time.Parse("2006-01-0215:04:05", string(data))
-	if err != nil {
-		return err
-	}
-
-	*t = BSSDateTime(dt)
-
-	return nil
 }

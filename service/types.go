@@ -10,7 +10,7 @@ import (
 
 type OfferService interface {
 	Search(ctx context.Context, appID string, active *bool) ([]model.Offer, error)
-	Create(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) error
+	Sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest)
 	Get(ctx context.Context, id string, appID string) (*model.Offer, error)
 }
 

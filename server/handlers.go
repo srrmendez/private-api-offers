@@ -3,11 +3,8 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/srrmendez/private-api-offers/model"
@@ -113,19 +110,6 @@ func createOffers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO Remove this
-	go func() {
-		var data interface{}
-		json.NewDecoder(r.Body).Decode(&data)
-
-		d, _ := json.MarshalIndent(data, "", "\t")
-
-		now := time.Now().Unix()
-
-		ioutil.WriteFile(fmt.Sprintf("%d.json", now), d, 0777)
-	}()
-	//
-
 	var request model.BssSyncOfferRequest
 
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -134,11 +118,6 @@ func createOffers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = env.offerService.Create(r.Context(), clientID, request)
-	if err != nil {
-		pkgHttp.ErrorResponse(w, err, http.StatusInternalServerError)
-		return
-	}
-
+	env.offerService.Sync(r.Context(), clientID, request)
 	pkgHttp.JsonResponse(w, map[string]string{}, http.StatusCreated)
 }

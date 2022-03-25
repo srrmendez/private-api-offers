@@ -23,19 +23,19 @@ type Offer struct {
 	ExternalID *string         `json:"external_id,omitempty" bson:"external_id,omitempty"`
 	CreatedAt  CustomTimeStamp `json:"created_at" bson:"created_at"`
 	UpdatedAt  CustomTimeStamp `json:"updated_at" bson:"updated_at"`
-	Name       string          `json:"name" bson:"name"`
+	Name       string          `json:"name,omitempty" bson:"name,omitempty"`
 	Code       *string         `json:"code,omitempty" bson:"code,omitempty"`
-	ClientType ClientType      `json:"client_type" bson:"client_type"`
-	Paymode    PayModeType     `json:"pay_mode" bson:"pay_mode"`
-	StandAlone bool            `json:"standalone" bson:"standalone"`
+	ClientType ClientType      `json:"client_type,omitempty" bson:"client_type,omitempty"`
+	Paymode    PayModeType     `json:"pay_mode,omitempty" bson:"pay_mode,omitempty"`
+	StandAlone bool            `json:"standalone,omitempty" bson:"standalone,omitempty"`
 
-	Category       string          `json:"category" bson:"category"`
-	EffectiveDate  CustomTimeStamp `json:"-" bson:"effective_date"`
-	ExpirationDate CustomTimeStamp `json:"expiration_date" bson:"expiration_date"`
+	Category       string           `json:"category,omitempty" bson:"category,omitempty"`
+	EffectiveDate  *CustomTimeStamp `json:"-" bson:"effective_date,omitempty"`
+	ExpirationDate *CustomTimeStamp `json:"expiration_date,omitempty" bson:"expiration_date,omitempty"`
 
 	Description *string           `json:"description,omitempty" bson:"description,omitempty"`
-	MonthlyFee  float64           `json:"monthly_fee" bson:"monthly_fee"`
-	OneOfFee    float64           `json:"one_of_fee" bson:"one_of_fee"`
+	MonthlyFee  float64           `json:"monthly_fee,omitempty" bson:"monthly_fee,omitempty"`
+	OneOfFee    float64           `json:"one_of_fee,omitempty" bson:"one_of_fee,omitempty"`
 	Childrens   []Offer           `json:"childrens,omitempty" bson:"childrens,omitempty"`
 	Metadata    map[string]string `json:"metadata,omitempty" bson:"metadata,omitempty"`
 }
