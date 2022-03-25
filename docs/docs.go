@@ -203,9 +203,6 @@ var doc = `{
         }
     },
     "definitions": {
-        "model.BSSDateTime": {
-            "$ref": "#/definitions/time.Time"
-        },
         "model.BssAttached": {
             "type": "object",
             "properties": {
@@ -282,12 +279,10 @@ var doc = `{
                     "$ref": "#/definitions/model.BssCatalogList"
                 },
                 "eff_date": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.BSSDateTime"
+                    "type": "string"
                 },
                 "exp_date": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.BSSDateTime"
+                    "type": "string"
                 },
                 "monthly_fee": {
                     "type": "number"

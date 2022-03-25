@@ -1,6 +1,4 @@
 definitions:
-  model.BSSDateTime:
-    $ref: '#/definitions/time.Time'
   model.BssAttached:
     properties:
       offeringID:
@@ -51,11 +49,9 @@ definitions:
         $ref: '#/definitions/model.BssCatalogList'
         type: object
       eff_date:
-        $ref: '#/definitions/model.BSSDateTime'
-        type: object
+        type: string
       exp_date:
-        $ref: '#/definitions/model.BSSDateTime'
-        type: object
+        type: string
       monthly_fee:
         type: number
       offer_cata:
