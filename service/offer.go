@@ -218,7 +218,6 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) model.Offer {
 
 	if bssOffer.EffectiveDate != nil {
 		t, _ := time.Parse("2006-01-02 15:04:05", *bssOffer.EffectiveDate)
-
 		ts := model.CustomTimeStamp(t.Unix())
 
 		offer.EffectiveDate = &ts
@@ -229,7 +228,7 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) model.Offer {
 
 		ts := model.CustomTimeStamp(t.Unix())
 
-		offer.EffectiveDate = &ts
+		offer.ExpirationDate = &ts
 	}
 
 	return offer
