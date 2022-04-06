@@ -2,8 +2,8 @@
 app:
     appPath: /offers
     port: 8000
-    #logAddress: /var/log/interface/api-offers/trace.log
-    logAddress: ./trace.log
+    logAddress: /var/log/interface/api-offers/trace.log
+    #logAddress: ./trace.log
 
 database:
     host: 127.0.0.1

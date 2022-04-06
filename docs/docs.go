@@ -203,6 +203,15 @@ var doc = `{
         }
     },
     "definitions": {
+        "model.BSSOfferRequest": {
+            "type": "object",
+            "properties": {
+                "offer": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.BssOffer"
+                }
+            }
+        },
         "model.BssAttached": {
             "type": "object",
             "properties": {
@@ -346,7 +355,7 @@ var doc = `{
                 "syncOffers": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.BssOffer"
+                        "$ref": "#/definitions/model.BSSOfferRequest"
                     }
                 }
             }

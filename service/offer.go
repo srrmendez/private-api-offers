@@ -57,20 +57,20 @@ func (s *service) sync(ctx context.Context, appID string, bssSyncOffer model.Bss
 		return
 	}
 
-	for _, bssOffer := range bssSyncOffer.SyncOffers {
-		if bssOffer.PrimaryFlag == "1" {
-			err = s.syncPrimaryOffer(ctx, bssOffer)
+	for _, offer := range bssSyncOffer.SyncOffers {
+		if offer.Offer.PrimaryFlag == "1" {
+			err = s.syncPrimaryOffer(ctx, offer.Offer)
 			if err != nil {
-				msg := fmt.Sprintf("syncing offer [%s] [%s]", bssOffer.Name, err)
+				msg := fmt.Sprintf("syncing offer [%s] [%s]", offer.Offer.Name, err)
 				s.logger.Error(msg)
 			}
 
 			continue
 		}
 
-		err = s.syncSupplementaryOffer(ctx, bssOffer, offers)
+		err = s.syncSupplementaryOffer(ctx, offer.Offer, offers)
 		if err != nil {
-			msg := fmt.Sprintf("syncing offer [%s] [%s]", bssOffer.Name, err)
+			msg := fmt.Sprintf("syncing offer [%s] [%s]", offer.Offer.Name, err)
 			s.logger.Error(msg)
 		}
 	}

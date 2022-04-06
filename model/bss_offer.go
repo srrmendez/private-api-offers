@@ -75,6 +75,10 @@ type BssOffer struct {
 	TopupFee       string               `json:"topupFee"`
 }
 
+type BSSOfferRequest struct {
+	Offer BssOffer `json:"offer"`
+}
+
 type BssSyncOfferRequest struct {
-	SyncOffers []BssOffer `json:"syncOffers"`
+	SyncOffers []BSSOfferRequest `json:"syncOffers"`
 }

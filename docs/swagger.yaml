@@ -1,4 +1,10 @@
 definitions:
+  model.BSSOfferRequest:
+    properties:
+      offer:
+        $ref: '#/definitions/model.BssOffer'
+        type: object
+    type: object
   model.BssAttached:
     properties:
       offeringID:
@@ -93,7 +99,7 @@ definitions:
     properties:
       syncOffers:
         items:
-          $ref: '#/definitions/model.BssOffer'
+          $ref: '#/definitions/model.BSSOfferRequest'
         type: array
     type: object
   model.Offer:
