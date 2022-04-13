@@ -6,21 +6,24 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/srrmendez/private-api-offers/conf"
 	"github.com/srrmendez/private-api-offers/model"
 	"github.com/srrmendez/private-api-offers/repository"
 	log "github.com/srrmendez/services-interface-tools/pkg/logger"
 )
 
 func NewService(repository repository.OfferRepository, logger log.Log,
+	confCategories map[string]conf.Category,
 ) *service {
 	return &service{
-		repository: repository,
-		logger:     logger,
+		repository:     repository,
+		logger:         logger,
+		confCategories: confCategories,
 	}
 }
 
-func (s *service) Search(ctx context.Context, appID string, active *bool) ([]model.Offer, error) {
-	if active == nil {
+func (s *service) Search(ctx context.Context, appID string, active *bool, category *model.CategoryType) ([]model.Offer, error) {
+	if active == nil && category == nil {
 		offers, err := s.repository.All(ctx)
 		if err != nil {
 			msg := fmt.Sprintf("[%s] searching offers error [%s]", appID, err)
@@ -33,7 +36,7 @@ func (s *service) Search(ctx context.Context, appID string, active *bool) ([]mod
 		return offers, nil
 	}
 
-	offers, err := s.repository.Search(ctx, *active)
+	offers, err := s.repository.Search(ctx, active, category)
 	if err != nil {
 		msg := fmt.Sprintf("[%s] searching offers error [%s]", appID, err)
 
@@ -180,7 +183,6 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) model.Offer {
 		ExternalID: &bssOffer.ID,
 		Name:       bssOffer.Name,
 		Code:       &bssOffer.Code,
-		Category:   bssOffer.Category,
 		ClientType: model.IndividualClienType,
 		Paymode:    model.PostpaidPayMode,
 		StandAlone: true,
@@ -205,9 +207,17 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) model.Offer {
 	}
 
 	if bssOffer.Attributes != nil && len((*bssOffer.Attributes).Attribute) > 0 {
-		offer.Metadata = map[string]string{}
-
 		for _, attributte := range (*bssOffer.Attributes).Attribute {
+			if v, ok := s.confCategories[attributte.Value]; ok {
+				offer.Category = v.Category
+				offer.Type = v.Type
+				continue
+			}
+
+			if len(offer.Metadata) == 0 {
+				offer.Metadata = make(map[string]string)
+			}
+
 			offer.Metadata[attributte.Code] = attributte.Value
 		}
 	}

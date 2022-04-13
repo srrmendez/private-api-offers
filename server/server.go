@@ -61,7 +61,7 @@ func Init() {
 		conf.GetProps().Database.Table)
 
 	env = Env{
-		offerService: service.NewService(offerRepository, lg),
+		offerService: service.NewService(offerRepository, lg, conf.GetProps().Categories),
 	}
 
 	// Creating http logger

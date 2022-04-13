@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -27,6 +28,7 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 // @Produce  json
 // @Param x-client-id header string true "client id"
 // @Param active query bool false "offers status"
+// @Param category query string false "offers categories"
 // @Success 200 {array} model.Offer
 // @Failure 401 Unauthorized Request
 // @Failure 500 Server Error
@@ -41,12 +43,26 @@ func searchOffers(w http.ResponseWriter, r *http.Request) {
 
 	var active *bool
 
-	if r.URL.Query().Get("active") != "" {
-		st, _ := strconv.ParseBool(r.URL.Query().Get("active"))
+	if act := r.URL.Query().Get("active"); act != "" {
+		st, _ := strconv.ParseBool(act)
 		active = &st
 	}
 
-	offers, err := env.offerService.Search(r.Context(), clientID, active)
+	var category *model.CategoryType
+
+	if cat := r.URL.Query().Get("category"); cat != "" {
+		err := checkRequestCategoryType(cat)
+		if err != nil {
+			pkgHttp.ErrorResponse(w, err, http.StatusBadRequest)
+			return
+		}
+
+		st := model.CategoryType(cat)
+
+		category = &st
+	}
+
+	offers, err := env.offerService.Search(r.Context(), clientID, active, category)
 	if err != nil {
 		pkgHttp.ErrorResponse(w, err, http.StatusInternalServerError)
 		return
@@ -120,4 +136,16 @@ func createOffers(w http.ResponseWriter, r *http.Request) {
 
 	env.offerService.Sync(r.Context(), clientID, request)
 	pkgHttp.JsonResponse(w, map[string]string{}, http.StatusCreated)
+}
+
+func checkRequestCategoryType(cat string) error {
+	categories := []model.CategoryType{model.CategoryTypeDataCenter, model.CategoryTypeYellowPages}
+
+	for _, category := range categories {
+		if cat == string(category) {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("incorrect category posible values are %s, %s", model.CategoryTypeDataCenter, model.CategoryTypeYellowPages)
 }

@@ -8,6 +8,8 @@ import (
 type CustomTimeStamp int64
 type ClientType string
 type PayModeType string
+type CategoryType string
+type OfferType string
 
 const (
 	IndividualClienType  ClientType = "INDIVIDUAL"
@@ -16,6 +18,16 @@ const (
 	PrepaidPayMode  PayModeType = "PREPAID"
 	PostpaidPayMode PayModeType = "POSTPAID"
 	AllPayMode      PayModeType = "ALL"
+
+	CategoryTypeDataCenter  CategoryType = "DATACENTER"
+	CategoryTypeYellowPages CategoryType = "YELLOW_PAGES"
+
+	OfferTypeVPS               OfferType = "VPS"
+	OfferTypeWebHosting        OfferType = "WEB_HOSTING"
+	OfferTypeVirtualDataCenter OfferType = "VIRTUAL_DATA_CENTER"
+	OfferTypeHouseLeasing      OfferType = "HOUSE_LEASING"
+	OfferTypeDedicatedServer   OfferType = "DEDICATED_SERVER"
+	OfferTypeYellowPages       OfferType = "YELLOW_PAGES"
 )
 
 type Offer struct {
@@ -29,7 +41,9 @@ type Offer struct {
 	Paymode    PayModeType     `json:"pay_mode,omitempty" bson:"pay_mode,omitempty"`
 	StandAlone bool            `json:"standalone,omitempty" bson:"standalone,omitempty"`
 
-	Category       string           `json:"category,omitempty" bson:"category,omitempty"`
+	Category CategoryType `json:"category,omitempty" bson:"category,omitempty"`
+	Type     OfferType    `json:"type,omitempty" bson:"type,omitempty"`
+
 	EffectiveDate  *CustomTimeStamp `json:"-" bson:"effective_date,omitempty"`
 	ExpirationDate *CustomTimeStamp `json:"expiration_date,omitempty" bson:"expiration_date,omitempty"`
 

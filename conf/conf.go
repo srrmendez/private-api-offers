@@ -3,6 +3,7 @@ package conf
 import (
 	"sync"
 
+	"github.com/srrmendez/private-api-offers/model"
 	"github.com/srrmendez/services-interface-tools/pkg/config"
 )
 
@@ -23,6 +24,11 @@ func GetProps() *Properties {
 	return properties
 }
 
+type Category struct {
+	Category model.CategoryType `yaml:"category"`
+	Type     model.OfferType    `yaml:"type"`
+}
+
 type Properties struct {
 	App struct {
 		Path       string `yaml:"appPath"`
@@ -35,4 +41,5 @@ type Properties struct {
 		Database string `yaml:"database"`
 		Table    string `yaml:"table"`
 	} `yaml:"database"`
+	Categories map[string]Category `yaml:"categories"`
 }

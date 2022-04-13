@@ -103,21 +103,29 @@ func (r *repository) GetByExternalID(ctx context.Context, id string) (*model.Off
 	return &offer, nil
 }
 
-func (r *repository) Search(ctx context.Context, active bool) ([]model.Offer, error) {
+func (r *repository) Search(ctx context.Context, active *bool, category *model.CategoryType) ([]model.Offer, error) {
 	now := time.Now().Unix()
 
-	query := bson.D{
-		{"effective_date", bson.D{{"$lte", now}}},
-		{"expiration_date", bson.D{{"$gte", now}}},
+	query := bson.D{}
+
+	if active != nil {
+		query = bson.D{
+			{"effective_date", bson.D{{"$lte", now}}},
+			{"expiration_date", bson.D{{"$gte", now}}},
+		}
+
+		if !*active {
+			query = bson.D{
+				{"$or", []bson.D{
+					{{"effective_date", bson.D{{"$gt", now}}}},
+					{{"expiration_date", bson.D{{"$lt", now}}}},
+				}},
+			}
+		}
 	}
 
-	if !active {
-		query = bson.D{
-			{"$or", []bson.D{
-				{{"effective_date", bson.D{{"$gt", now}}}},
-				{{"expiration_date", bson.D{{"$lt", now}}}},
-			}},
-		}
+	if category != nil {
+		query = append(query, bson.D{{"category", *category}}...)
 	}
 
 	cursor, err := r.collection.Find(ctx, query)

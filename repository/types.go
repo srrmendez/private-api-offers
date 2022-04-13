@@ -12,7 +12,7 @@ type OfferRepository interface {
 	Upsert(ctx context.Context, offer model.Offer) (*model.Offer, error)
 	Get(ctx context.Context, id string) (*model.Offer, error)
 	GetByExternalID(ctx context.Context, id string) (*model.Offer, error)
-	Search(ctx context.Context, active bool) ([]model.Offer, error)
+	Search(ctx context.Context, active *bool, category *model.CategoryType) ([]model.Offer, error)
 	RemoveByExternalID(ctx context.Context, id string) error
 }
 
