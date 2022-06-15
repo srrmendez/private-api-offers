@@ -7,14 +7,17 @@ import (
 	"os"
 	"time"
 
+	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/srrmendez/private-api-offers/conf"
-	"github.com/srrmendez/private-api-offers/docs"
+
+	//"github.com/srrmendez/private-api-offers/docs"
 	"github.com/srrmendez/private-api-offers/repository"
 	"github.com/srrmendez/private-api-offers/service"
 	pkgHttp "github.com/srrmendez/services-interface-tools/pkg/http"
 	log "github.com/srrmendez/services-interface-tools/pkg/logger"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/swaggo/swag/example/basic/docs"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -60,8 +63,11 @@ func Init() {
 	offerRepository := repository.NewRepository(mongoClient, conf.GetProps().Database.Database,
 		conf.GetProps().Database.Table)
 
+	supplementaryRepository := repository.NewRepository(mongoClient, conf.GetProps().Database.Database,
+		conf.GetProps().Database.SupplementaryTable)
+
 	env = Env{
-		offerService: service.NewService(offerRepository, lg, conf.GetProps().Categories),
+		offerService: service.NewService(offerRepository, supplementaryRepository, lg, conf.GetProps().Categories),
 	}
 
 	// Creating http logger
@@ -77,10 +83,27 @@ func Init() {
 
 	port := fmt.Sprintf(":%d", conf.GetProps().App.Port)
 
+	corsOpts := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+			http.MethodOptions,
+			http.MethodHead,
+		},
+
+		AllowedHeaders: []string{
+			"*",
+		},
+	})
+
 	server := http.Server{
 		Addr:         port,
 		WriteTimeout: 30 * time.Second,
-		Handler:      router,
+		Handler:      corsOpts.Handler(router),
 	}
 
 	if err := server.ListenAndServe(); err != nil {

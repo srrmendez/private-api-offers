@@ -12,8 +12,8 @@ var syncProperties sync.Once
 
 func GetProps() *Properties {
 	syncProperties.Do(func() {
-		//dir := "./config/conf.yaml"
-		dir := "/var/www/api-offers/config/conf.yaml"
+		dir := "./config/conf.yaml"
+		//dir := "/var/www/api-offers/config/conf.yaml"
 
 		if err := config.LoadEnvFromYamlFile(dir, &properties); err != nil {
 			panic(err)
@@ -36,10 +36,11 @@ type Properties struct {
 		LogAddress string `yaml:"logAddress"`
 	} `yaml:"app"`
 	Database struct {
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		Database string `yaml:"database"`
-		Table    string `yaml:"table"`
+		Host               string `yaml:"host"`
+		Port               int    `yaml:"port"`
+		Database           string `yaml:"database"`
+		Table              string `yaml:"table"`
+		SupplementaryTable string `yaml:"supplementaryTable"`
 	} `yaml:"database"`
 	Categories map[string]Category `yaml:"categories"`
 }

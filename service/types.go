@@ -13,10 +13,12 @@ type OfferService interface {
 	Search(ctx context.Context, appID string, active *bool, category *model.CategoryType) ([]model.Offer, error)
 	Sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest)
 	Get(ctx context.Context, id string, appID string) (*model.Offer, error)
+	GetSecondaryOffers(ctx context.Context, ids []string) ([]model.Offer, error)
 }
 
 type service struct {
-	logger         log.Log
-	repository     repository.OfferRepository
-	confCategories map[string]conf.Category
+	logger                  log.Log
+	repository              repository.OfferRepository
+	supplementaryRepository repository.OfferRepository
+	confCategories          map[string]conf.Category
 }

@@ -15,6 +15,13 @@ var Routes = pkgHttp.Routes{
 		ShouldLog:  true,
 	},
 	{
+		Name:       "Secondary Offer",
+		Pattern:    "/v1/secondary",
+		HandleFunc: getSecondaryOffers,
+		Method:     http.MethodGet,
+		ShouldLog:  true,
+	},
+	{
 		Name:       "Get Offer",
 		Pattern:    "/v1/{id}",
 		HandleFunc: getOffer,

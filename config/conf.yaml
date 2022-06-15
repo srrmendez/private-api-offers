@@ -7,30 +7,28 @@ app:
 
 database:
     host: 127.0.0.1
-    #host: 172.29.20.88
+    #host: 172.29.20.32
     port: 27017
     database: service_layer
     table: offers
+    supplementaryTable: supplementary_offers
 
 categories:
     5:
-     type: WEB_HOSTING
-     category: DATACENTER
+        type: WEB_HOSTING
+        category: DATACENTER
     6:
-     type: VPS
-     category: DATACENTER
+        type: VPS
+        category: DATACENTER
     7:
-     type: VIRTUAL_DATA_CENTER
-     category: DATACENTER
+        type: VIRTUAL_DATA_CENTER
+        category: DATACENTER
     8:
-     type: DEDICATED_SERVER
-     category: DATACENTER
+        type: DEDICATED_SERVER
+        category: DATACENTER
     9:
-     type: HOUSE_LEASING
-     category: DATACENTER
+        type: HOUSE_LEASING
+        category: DATACENTER
     10:
-     type: YELLOW_PAGES
-     category: YELLOW_PAGES
-
-    
-     
+        type: YELLOW_PAGES
+        category: YELLOW_PAGES

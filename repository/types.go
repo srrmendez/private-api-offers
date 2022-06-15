@@ -14,6 +14,7 @@ type OfferRepository interface {
 	GetByExternalID(ctx context.Context, id string) (*model.Offer, error)
 	Search(ctx context.Context, active *bool, category *model.CategoryType) ([]model.Offer, error)
 	RemoveByExternalID(ctx context.Context, id string) error
+	GetByIDList(ctx context.Context, ids []string) ([]model.Offer, error)
 }
 
 type repository struct {

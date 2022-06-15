@@ -59,18 +59,18 @@ func (r *repository) Upsert(ctx context.Context, offer model.Offer) (*model.Offe
 }
 
 func (r *repository) initializeOffer(offer *model.Offer) {
-	now := time.Now().Unix()
+	now := time.Now().Format("2006-01-02 15:04:00")
 
 	if offer.ID == "" {
 		offer.ID = uuid.NewString()
-		offer.CreatedAt = model.CustomTimeStamp(now)
+		offer.CreatedAt = now
 	}
 
-	offer.UpdatedAt = model.CustomTimeStamp(now)
+	offer.UpdatedAt = now
 }
 
 func (r *repository) Get(ctx context.Context, id string) (*model.Offer, error) {
-	filter := bson.D{{"_id", id}}
+	filter := bson.D{{"external_id", id}}
 
 	var offer model.Offer
 
@@ -158,4 +158,30 @@ func (r *repository) RemoveByExternalID(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (r *repository) GetByIDList(ctx context.Context, ids []string) ([]model.Offer, error) {
+	filter := bson.D{{"external_id", bson.D{{"$in", ids}}}, {"name", bson.D{{"$exists", true}}}}
+
+	var offers []model.Offer
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var offer model.Offer
+
+		err = cursor.Decode(&offer)
+		if err != nil {
+			return nil, err
+		}
+
+		offers = append(offers, offer)
+	}
+
+	return offers, nil
 }

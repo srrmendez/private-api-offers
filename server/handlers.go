@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/srrmendez/private-api-offers/model"
@@ -104,6 +105,41 @@ func getOffer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pkgHttp.JsonResponse(w, offer, http.StatusOK)
+}
+
+// Get Offer godoc
+// @Tags Get Offer
+// @Accept  json
+// @Produce  json
+// @Param x-client-id header string true "client id"
+// @Param ids query string true "ids"
+// @Success 200 {array} model.Offer
+// @Failure 404 Offer Not Found
+// @Failure 401 Unauthorized Request
+// @Failure 500 Server Error
+// @Router /v1/secondary[get]
+func getSecondaryOffers(w http.ResponseWriter, r *http.Request) {
+	clientID := r.Header.Get("x-client-id")
+
+	if clientID == "" {
+		pkgHttp.ErrorResponse(w, errors.New("unauthorized"), http.StatusUnauthorized)
+		return
+	}
+
+	ids := strings.Split(r.URL.Query().Get("ids"), ",")
+	if len(ids) == 0 {
+		pkgHttp.ErrorResponse(w, errors.New("missing ids"), http.StatusBadRequest)
+
+		return
+	}
+
+	offers, err := env.offerService.GetSecondaryOffers(r.Context(), ids)
+	if err != nil {
+		pkgHttp.ErrorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	pkgHttp.JsonResponse(w, offers, http.StatusOK)
 }
 
 // Create Offers godoc

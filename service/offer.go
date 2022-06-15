@@ -3,22 +3,22 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
+	"strconv"
 
-	"github.com/google/uuid"
 	"github.com/srrmendez/private-api-offers/conf"
 	"github.com/srrmendez/private-api-offers/model"
 	"github.com/srrmendez/private-api-offers/repository"
 	log "github.com/srrmendez/services-interface-tools/pkg/logger"
 )
 
-func NewService(repository repository.OfferRepository, logger log.Log,
+func NewService(repository repository.OfferRepository, supplementary repository.OfferRepository, logger log.Log,
 	confCategories map[string]conf.Category,
 ) *service {
 	return &service{
-		repository:     repository,
-		logger:         logger,
-		confCategories: confCategories,
+		repository:              repository,
+		supplementaryRepository: supplementary,
+		logger:                  logger,
+		confCategories:          confCategories,
 	}
 }
 
@@ -53,27 +53,18 @@ func (s *service) Sync(ctx context.Context, appID string, bssSyncOffer model.Bss
 }
 
 func (s *service) sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) {
-	offers, err := s.repository.All(ctx)
-	if err != nil {
-		msg := fmt.Sprintf("syncing getting all offers error: [%s]", err)
-		s.logger.Error(msg)
-		return
-	}
-
-	for _, offer := range bssSyncOffer.SyncOffers {
-		if offer.Offer.PrimaryFlag == "1" {
-			err = s.syncPrimaryOffer(ctx, offer.Offer)
-			if err != nil {
-				msg := fmt.Sprintf("syncing offer [%s] [%s]", offer.Offer.Name, err)
+	for i := range bssSyncOffer.SyncOffers {
+		if bssSyncOffer.SyncOffers[i].Offer.PrimaryFlag == "1" {
+			if err := s.syncPrimaryOffer(ctx, bssSyncOffer.SyncOffers[i].Offer); err != nil {
+				msg := fmt.Sprintf("syncing offer [%s] [%s]", bssSyncOffer.SyncOffers[i].Offer.Name, err)
 				s.logger.Error(msg)
 			}
 
 			continue
 		}
 
-		err = s.syncSupplementaryOffer(ctx, offer.Offer, offers)
-		if err != nil {
-			msg := fmt.Sprintf("syncing offer [%s] [%s]", offer.Offer.Name, err)
+		if err := s.syncSupplementaryOffer(ctx, bssSyncOffer.SyncOffers[i].Offer); err != nil {
+			msg := fmt.Sprintf("syncing offer [%s] [%s]", bssSyncOffer.SyncOffers[i].Offer.Name, err)
 			s.logger.Error(msg)
 		}
 	}
@@ -89,7 +80,11 @@ func (s *service) syncPrimaryOffer(ctx context.Context, bssOffer model.BssOffer)
 		return err
 	}
 
-	nOffer := s.mapBssOfferToOffer(bssOffer)
+	nOffer, err := s.mapBssOfferToOffer(bssOffer)
+	if err != nil {
+		return err
+	}
+
 	if offer != nil {
 		nOffer.ID = offer.ID
 		nOffer.CreatedAt = offer.CreatedAt
@@ -97,21 +92,21 @@ func (s *service) syncPrimaryOffer(ctx context.Context, bssOffer model.BssOffer)
 	}
 
 	if bssOffer.Relationships != nil && len(bssOffer.Relationships.Attached) > 0 {
-		nOffer.Childrens = make([]model.Offer, 0, len(bssOffer.Relationships.Attached))
+		nOffer.Supplementaries = make([]string, 0, len(bssOffer.Relationships.Attached))
 
 		for i := range bssOffer.Relationships.Attached {
-			now := time.Now().Unix()
-
-			nOffer.Childrens = append(nOffer.Childrens, model.Offer{
+			sOffer, err := s.supplementaryRepository.Upsert(ctx, model.Offer{
 				ExternalID: &bssOffer.Relationships.Attached[i].ID,
-				CreatedAt:  model.CustomTimeStamp(now),
-				UpdatedAt:  model.CustomTimeStamp(now),
-				ID:         uuid.NewString(),
 			})
+			if err != nil {
+				return err
+			}
+
+			nOffer.Supplementaries = append(nOffer.Supplementaries, sOffer.ID)
 		}
 	}
 
-	_, err = s.repository.Upsert(ctx, nOffer)
+	_, err = s.repository.Upsert(ctx, *nOffer)
 	if err != nil {
 		return err
 	}
@@ -119,87 +114,50 @@ func (s *service) syncPrimaryOffer(ctx context.Context, bssOffer model.BssOffer)
 	return nil
 }
 
-func (s *service) syncSupplementaryOffer(ctx context.Context, bssOffer model.BssOffer, offers []model.Offer) error {
-	for _, offer := range offers {
-		if len(offer.Childrens) == 0 {
-			continue
-		}
+func (s *service) syncSupplementaryOffer(ctx context.Context, bssOffer model.BssOffer) error {
+	if bssOffer.Status == model.SuspendBssStatus || bssOffer.Status == model.RetirementBssStatus {
+		return s.supplementaryRepository.RemoveByExternalID(ctx, bssOffer.ID)
+	}
 
-		var index *int
+	offer, err := s.repository.GetByExternalID(ctx, bssOffer.ID)
+	if err != nil {
+		return err
+	}
 
-		for i := range offer.Childrens {
-			if offer.Childrens[i].ExternalID == nil || *offer.Childrens[i].ExternalID != bssOffer.ID {
-				continue
-			}
+	nOffer, err := s.mapBssOfferToOffer(bssOffer)
+	if err != nil {
+		return err
+	}
 
-			if bssOffer.Status == model.SuspendBssStatus || bssOffer.Status == model.RetirementBssStatus {
-				index = &i
-				break
-			}
+	if offer != nil {
+		nOffer.ID = offer.ID
+		nOffer.CreatedAt = offer.CreatedAt
+		nOffer.UpdatedAt = offer.UpdatedAt
+	}
 
-			nOffer := s.mapBssOfferToOffer(bssOffer)
-			nOffer.ID = offer.Childrens[i].ID
-			nOffer.CreatedAt = offer.Childrens[i].CreatedAt
-
-			now := time.Now().Unix()
-			nOffer.UpdatedAt = model.CustomTimeStamp(now)
-
-			offer.Childrens[i] = nOffer
-
-			_, err := s.repository.Upsert(ctx, offer)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		}
-
-		if index != nil {
-			nChildren := make([]model.Offer, 0)
-			for i := range offer.Childrens {
-				if i == *index {
-					continue
-				}
-
-				nChildren = append(nChildren, offer.Childrens[i])
-			}
-
-			offer.Childrens = nChildren
-
-			_, err := s.repository.Upsert(ctx, offer)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		}
+	if _, err = s.supplementaryRepository.Upsert(ctx, *nOffer); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) model.Offer {
+func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, error) {
 	offer := model.Offer{
-		ExternalID: &bssOffer.ID,
-		Name:       bssOffer.Name,
-		Code:       &bssOffer.Code,
-		ClientType: model.IndividualClienType,
-		Paymode:    model.PostpaidPayMode,
-		StandAlone: true,
-		OneOfFee:   bssOffer.OneOfFee,
-		MonthlyFee: bssOffer.MontlyFee,
-	}
-
-	if bssOffer.OnSale == model.NoSaleAlone {
-		offer.StandAlone = false
+		ExternalID:      &bssOffer.ID,
+		Name:            bssOffer.Name,
+		ClientType:      model.IndividualClienType,
+		Paymentmode:     model.PostpaidPayMode,
+		Fare:            bssOffer.MontlyFee,
+		Supplementaries: []string{},
 	}
 
 	if bssOffer.PayMode == model.AllBssPaymode {
-		offer.Paymode = model.AllPayMode
+		offer.Paymentmode = model.AllPayMode
 	}
 
 	if bssOffer.PayMode == model.PostpaidBssPaymode {
-		offer.Paymode = model.PostpaidPayMode
+		offer.Paymentmode = model.PostpaidPayMode
 	}
 
 	if bssOffer.Type == model.CorporativeBssOfferClient {
@@ -214,34 +172,137 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) model.Offer {
 				continue
 			}
 
-			if len(offer.Metadata) == 0 {
-				offer.Metadata = make(map[string]string)
-			}
+			switch attributte.Code {
+			case "CN_ALIAS_NUM":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
 
-			offer.Metadata[attributte.Code] = attributte.Value
+				d, err := strconv.ParseFloat(attributte.Value, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.Alias.Amount = &d
+			case "C_BD_NUM":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				d, err := strconv.Atoi(attributte.Value)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.Database.Quantity = &d
+			case "CN_BD_SPACE":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				d, err := strconv.ParseFloat(attributte.Value, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.Database.Amount = &d
+			case "C_BD_SPACE_UNIT":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				offer.DataCenterResourceAttributtes.Database.Unit = &attributte.Value
+			case "CN_CPU_NUM":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				d, err := strconv.ParseFloat(attributte.Value, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.CPU.Amount = &d
+			case "CN_FTP_NUM":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				d, err := strconv.ParseFloat(attributte.Value, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.FTP.Amount = &d
+			case "CN_PORT_NUM":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				d, err := strconv.ParseFloat(attributte.Value, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.NetworkInterface.Amount = &d
+			case "CN_IP_NUM":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				d, err := strconv.ParseFloat(attributte.Value, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.IPAddress.Amount = &d
+			case "CN_RAM_SPACE":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				d, err := strconv.ParseFloat(attributte.Value, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.Ram.Amount = &d
+			case "C_RAM_SPACE_UNIT":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				offer.DataCenterResourceAttributtes.Ram.Unit = &attributte.Value
+			case "C_DISK_SPACE":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				d, err := strconv.ParseFloat(attributte.Value, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.HDD.Amount = &d
+			case "C_DISK_SPACE_UNIT":
+				if offer.DataCenterResourceAttributtes == nil {
+					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				}
+
+				offer.DataCenterResourceAttributtes.HDD.Unit = &attributte.Value
+			}
 		}
 	}
 
-	if bssOffer.Description != "" {
-		offer.Description = &bssOffer.Description
-	}
-
 	if bssOffer.EffectiveDate != nil {
-		t, _ := time.Parse("2006-01-02 15:04:05", *bssOffer.EffectiveDate)
-		ts := model.CustomTimeStamp(t.Unix())
-
-		offer.EffectiveDate = &ts
+		offer.EffectiveDate = *bssOffer.EffectiveDate
 	}
 
 	if bssOffer.ExpirationDate != nil {
-		t, _ := time.Parse("2006-01-02 15:04:05", *bssOffer.ExpirationDate)
-
-		ts := model.CustomTimeStamp(t.Unix())
-
-		offer.ExpirationDate = &ts
+		offer.ExpirationDate = *bssOffer.ExpirationDate
 	}
 
-	return offer
+	return &offer, nil
 }
 
 func (s *service) Get(ctx context.Context, id string, appID string) (*model.Offer, error) {
@@ -255,4 +316,8 @@ func (s *service) Get(ctx context.Context, id string, appID string) (*model.Offe
 	}
 
 	return offer, nil
+}
+
+func (s *service) GetSecondaryOffers(ctx context.Context, ids []string) ([]model.Offer, error) {
+	return s.supplementaryRepository.GetByIDList(ctx, ids)
 }
