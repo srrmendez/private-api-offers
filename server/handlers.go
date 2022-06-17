@@ -170,7 +170,11 @@ func createOffers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	env.offerService.Sync(r.Context(), clientID, request)
+	if err := env.offerService.Sync(r.Context(), clientID, request); err != nil {
+		pkgHttp.ErrorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+
 	pkgHttp.JsonResponse(w, map[string]string{}, http.StatusCreated)
 }
 

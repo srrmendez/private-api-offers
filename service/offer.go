@@ -48,16 +48,18 @@ func (s *service) Search(ctx context.Context, appID string, active *bool, catego
 	return offers, nil
 }
 
-func (s *service) Sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) {
-	go s.sync(context.Background(), appID, bssSyncOffer)
+func (s *service) Sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) error {
+	return s.sync(context.Background(), appID, bssSyncOffer)
 }
 
-func (s *service) sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) {
+func (s *service) sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) error {
 	for i := range bssSyncOffer.SyncOffers {
 		if bssSyncOffer.SyncOffers[i].Offer.PrimaryFlag == "1" {
 			if err := s.syncPrimaryOffer(ctx, bssSyncOffer.SyncOffers[i].Offer); err != nil {
 				msg := fmt.Sprintf("syncing offer [%s] [%s]", bssSyncOffer.SyncOffers[i].Offer.Name, err)
 				s.logger.Error(msg)
+
+				return err
 			}
 
 			continue
@@ -66,8 +68,12 @@ func (s *service) sync(ctx context.Context, appID string, bssSyncOffer model.Bss
 		if err := s.syncSupplementaryOffer(ctx, bssSyncOffer.SyncOffers[i].Offer); err != nil {
 			msg := fmt.Sprintf("syncing offer [%s] [%s]", bssSyncOffer.SyncOffers[i].Offer.Name, err)
 			s.logger.Error(msg)
+
+			return err
 		}
 	}
+
+	return nil
 }
 
 func (s *service) syncPrimaryOffer(ctx context.Context, bssOffer model.BssOffer) error {
@@ -95,6 +101,16 @@ func (s *service) syncPrimaryOffer(ctx context.Context, bssOffer model.BssOffer)
 		nOffer.Supplementaries = make([]string, 0, len(bssOffer.Relationships.Attached))
 
 		for i := range bssOffer.Relationships.Attached {
+			supOffer, err := s.supplementaryRepository.GetByExternalID(ctx, bssOffer.Relationships.Attached[i].ID)
+			if err != nil {
+				return nil
+			}
+
+			if supOffer != nil {
+				nOffer.Supplementaries = append(nOffer.Supplementaries, supOffer.ID)
+				continue
+			}
+
 			sOffer, err := s.supplementaryRepository.Upsert(ctx, model.Offer{
 				ExternalID: &bssOffer.Relationships.Attached[i].ID,
 			})
@@ -106,8 +122,7 @@ func (s *service) syncPrimaryOffer(ctx context.Context, bssOffer model.BssOffer)
 		}
 	}
 
-	_, err = s.repository.Upsert(ctx, *nOffer)
-	if err != nil {
+	if _, err = s.repository.Upsert(ctx, *nOffer); err != nil {
 		return err
 	}
 
@@ -149,6 +164,7 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 		ClientType:      model.IndividualClienType,
 		Paymentmode:     model.PostpaidPayMode,
 		Fare:            bssOffer.MontlyFee,
+		ActivationFate:  bssOffer.OneOfFee,
 		Supplementaries: []string{},
 	}
 
@@ -174,122 +190,180 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 			switch attributte.Code {
 			case "CN_ALIAS_NUM":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
-
-				d, err := strconv.ParseFloat(attributte.Value, 64)
-				if err != nil {
-					return nil, err
-				}
-
-				offer.DataCenterResourceAttributtes.Alias.Amount = &d
-			case "C_BD_NUM":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
 				d, err := strconv.Atoi(attributte.Value)
 				if err != nil {
 					return nil, err
 				}
 
-				offer.DataCenterResourceAttributtes.Database.Quantity = &d
+				offer.DataCenterResourceAttributtes.AliasQty = &d
+			case "C_BD_NUM":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.Database = s.checkDatabaseNil(offer.DataCenterResourceAttributtes.Database)
+
+				d, err := strconv.Atoi(attributte.Value)
+				if err != nil {
+					return nil, err
+				}
+
+				offer.DataCenterResourceAttributtes.Database.Quantity = d
 			case "CN_BD_SPACE":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.Database = s.checkDatabaseNil(offer.DataCenterResourceAttributtes.Database)
 
 				d, err := strconv.ParseFloat(attributte.Value, 64)
 				if err != nil {
 					return nil, err
 				}
 
-				offer.DataCenterResourceAttributtes.Database.Amount = &d
+				offer.DataCenterResourceAttributtes.Database.Amount = d
 			case "C_BD_SPACE_UNIT":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				offer.DataCenterResourceAttributtes.Database.Unit = &attributte.Value
+				offer.DataCenterResourceAttributtes.Database = s.checkDatabaseNil(offer.DataCenterResourceAttributtes.Database)
+
+				offer.DataCenterResourceAttributtes.Database.Unit = attributte.Value
 			case "CN_CPU_NUM":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				d, err := strconv.ParseFloat(attributte.Value, 64)
+				d, err := strconv.Atoi(attributte.Value)
 				if err != nil {
 					return nil, err
 				}
 
-				offer.DataCenterResourceAttributtes.CPU.Amount = &d
+				offer.DataCenterResourceAttributtes.CPUQty = &d
 			case "CN_FTP_NUM":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				d, err := strconv.ParseFloat(attributte.Value, 64)
+				d, err := strconv.Atoi(attributte.Value)
 				if err != nil {
 					return nil, err
 				}
 
-				offer.DataCenterResourceAttributtes.FTP.Amount = &d
+				offer.DataCenterResourceAttributtes.FTPQty = &d
 			case "CN_PORT_NUM":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				d, err := strconv.ParseFloat(attributte.Value, 64)
+				d, err := strconv.Atoi(attributte.Value)
 				if err != nil {
 					return nil, err
 				}
 
-				offer.DataCenterResourceAttributtes.NetworkInterface.Amount = &d
+				offer.DataCenterResourceAttributtes.NetworkInterfaceQty = &d
 			case "CN_IP_NUM":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				d, err := strconv.ParseFloat(attributte.Value, 64)
-				if err != nil {
-					return nil, err
-				}
-
-				offer.DataCenterResourceAttributtes.IPAddress.Amount = &d
+				offer.DataCenterResourceAttributtes.PublicIPAddress = &attributte.Value
 			case "CN_RAM_SPACE":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.RAM = s.checkRAMNil(offer.DataCenterResourceAttributtes.RAM)
 
 				d, err := strconv.ParseFloat(attributte.Value, 64)
 				if err != nil {
 					return nil, err
 				}
 
-				offer.DataCenterResourceAttributtes.Ram.Amount = &d
+				offer.DataCenterResourceAttributtes.RAM.Amount = d
 			case "C_RAM_SPACE_UNIT":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				offer.DataCenterResourceAttributtes.Ram.Unit = &attributte.Value
+				offer.DataCenterResourceAttributtes.RAM = s.checkRAMNil(offer.DataCenterResourceAttributtes.RAM)
+
+				offer.DataCenterResourceAttributtes.RAM.Unit = attributte.Value
 			case "C_DISK_SPACE":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
-				}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.HDD = s.checkHDDNil(offer.DataCenterResourceAttributtes.HDD)
 
 				d, err := strconv.ParseFloat(attributte.Value, 64)
 				if err != nil {
 					return nil, err
 				}
 
-				offer.DataCenterResourceAttributtes.HDD.Amount = &d
+				offer.DataCenterResourceAttributtes.HDD.Amount = d
 			case "C_DISK_SPACE_UNIT":
-				if offer.DataCenterResourceAttributtes == nil {
-					offer.DataCenterResourceAttributtes = &model.DataCenterResourceAttributtes{}
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.HDD = s.checkHDDNil(offer.DataCenterResourceAttributtes.HDD)
+
+				offer.DataCenterResourceAttributtes.HDD.Unit = attributte.Value
+
+			case "C_RATE_NUM":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.Bandwidth = s.checkBandwithNil(offer.DataCenterResourceAttributtes.Bandwidth)
+
+				d, err := strconv.ParseFloat(attributte.Value, 64)
+				if err != nil {
+					return nil, err
 				}
 
-				offer.DataCenterResourceAttributtes.HDD.Unit = &attributte.Value
+				offer.DataCenterResourceAttributtes.Bandwidth.Amount = d
+
+			case "C_RATE_UNIT":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.Bandwidth = s.checkBandwithNil(offer.DataCenterResourceAttributtes.Bandwidth)
+
+				offer.DataCenterResourceAttributtes.Bandwidth.Unit = attributte.Value
+
+			case "CN_VPN_LANIP":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.VPN = s.checkVPNNil(offer.DataCenterResourceAttributtes.VPN)
+
+				offer.DataCenterResourceAttributtes.VPN.IPAddress = attributte.Value
+
+			case "CN_VPN_NAME":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.VPN = s.checkVPNNil(offer.DataCenterResourceAttributtes.VPN)
+
+				offer.DataCenterResourceAttributtes.VPN.Name = attributte.Value
+
+			case "CN_DNS":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.DNS = s.checkDNSNil(offer.DataCenterResourceAttributtes.DNS)
+
+				offer.DataCenterResourceAttributtes.DNS.DNS = attributte.Value
+
+			case "CN_DNS_CNAME":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.DNS = s.checkDNSNil(offer.DataCenterResourceAttributtes.DNS)
+
+				offer.DataCenterResourceAttributtes.DNS.Name = attributte.Value
+
+			case "C_DATAC_ACCESS_TYPE":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.AccessType = &attributte.Value
+
+			case "CN_VPS_LANIP":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.LANIPAddress = &attributte.Value
+
+			case "CN_VPS_WANIP":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.WANIPAddress = &attributte.Value
+
+			case "C_SAVEVM_FALG":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				value := false
+
+				if attributte.Value == "1" {
+					value = true
+				}
+
+				offer.DataCenterResourceAttributtes.SaveVM = &value
 			}
 		}
 	}
@@ -320,4 +394,60 @@ func (s *service) Get(ctx context.Context, id string, appID string) (*model.Offe
 
 func (s *service) GetSecondaryOffers(ctx context.Context, ids []string) ([]model.Offer, error) {
 	return s.supplementaryRepository.GetByIDList(ctx, ids)
+}
+
+func (s *service) checkDataCenterAttributesNil(v *model.DataCenterResourceAttributtes) *model.DataCenterResourceAttributtes {
+	if v == nil {
+		return &model.DataCenterResourceAttributtes{}
+	}
+
+	return v
+}
+
+func (s *service) checkDatabaseNil(v *model.Database) *model.Database {
+	if v == nil {
+		return &model.Database{}
+	}
+
+	return v
+}
+
+func (s *service) checkVPNNil(v *model.VPN) *model.VPN {
+	if v == nil {
+		return &model.VPN{}
+	}
+
+	return v
+}
+
+func (s *service) checkDNSNil(v *model.DNS) *model.DNS {
+	if v == nil {
+		return &model.DNS{}
+	}
+
+	return v
+}
+
+func (s *service) checkRAMNil(v *model.RAM) *model.RAM {
+	if v == nil {
+		return &model.RAM{}
+	}
+
+	return v
+}
+
+func (s *service) checkHDDNil(v *model.HDD) *model.HDD {
+	if v == nil {
+		return &model.HDD{}
+	}
+
+	return v
+}
+
+func (s *service) checkBandwithNil(v *model.BandWith) *model.BandWith {
+	if v == nil {
+		return &model.BandWith{}
+	}
+
+	return v
 }

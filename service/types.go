@@ -11,7 +11,7 @@ import (
 
 type OfferService interface {
 	Search(ctx context.Context, appID string, active *bool, category *model.CategoryType) ([]model.Offer, error)
-	Sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest)
+	Sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) error
 	Get(ctx context.Context, id string, appID string) (*model.Offer, error)
 	GetSecondaryOffers(ctx context.Context, ids []string) ([]model.Offer, error)
 }

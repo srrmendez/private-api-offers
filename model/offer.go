@@ -42,23 +42,55 @@ type Offer struct {
 	ExpirationDate string `json:"expiration_date,omitempty" bson:"expiration_date,omitempty"`
 
 	Fare            float64  `json:"fare,omitempty" bson:"fare,omitempty"`
+	ActivationFate  float64  `json:"activation_fare,omitempty" bson:"activation_fare,omitempty"`
 	Supplementaries []string `json:"supplementaries,omitempty" bson:"supplementaries,omitempty"`
 }
 
 type DataCenterResourceAttributtes struct {
-	Ram              ResourceValue `json:"ram,omitempty" bson:"ram,omitempty"`
-	HDD              ResourceValue `json:"hdd,omitempty" bson:"hdd,omitempty"`
-	CPU              ResourceValue `json:"cpu,omitempty" bson:"cpu,omitempty"`
-	Database         ResourceValue `json:"database,omitempty" bson:"database,omitempty"`
-	FTP              ResourceValue `json:"ftp,omitempty" bson:"ftp,omitempty"`
-	Alias            ResourceValue `json:"alias,omitempty" bson:"alias,omitempty"`
-	NetworkInterface ResourceValue `json:"network_interface,omitempty" bson:"network_interface,omitempty"`
-	IPAddress        ResourceValue `json:"ip_address,omitempty" bson:"ip_address,omitempty"`
-	SaveVM           *bool         `json:"save_vm,omitempty" bson:"save_vm,omitempty"`
+	RAM                 *RAM      `json:"ram,omitempty" bson:"ram,omitempty"`
+	HDD                 *HDD      `json:"hdd,omitempty" bson:"hdd,omitempty"`
+	CPUQty              *int      `json:"cpu_quantity,omitempty" bson:"cpu_quantity,omitempty"`
+	Database            *Database `json:"database,omitempty" bson:"database,omitempty"`
+	FTPQty              *int      `json:"ftp_quantity,omitempty" bson:"ftp_quantity,omitempty"`
+	AliasQty            *int      `json:"alias_quantity,omitempty" bson:"alias_quantity,omitempty"`
+	NetworkInterfaceQty *int      `json:"network_interface_qty,omitempty" bson:"network_interface_qty,omitempty"`
+	PublicIPAddress     *string   `json:"public_ip_address,omitempty" bson:"public_ip_address,omitempty"`
+	LANIPAddress        *string   `json:"lan_ip_address,omitempty" bson:"lan_ip_address,omitempty"`
+	WANIPAddress        *string   `json:"wan_ip_address,omitempty" bson:"wan_ip_address,omitempty"`
+	VPN                 *VPN      `json:"vpn,omitempty" bson:"vpn,omitempty"`
+	DNS                 *DNS      `json:"dns,omitempty" bson:"dns,omitempty"`
+	Bandwidth           *BandWith `json:"bandwidth,omitempty" bson:"bandwidth,omitempty"`
+	SaveVM              *bool     `json:"save_vm,omitempty" bson:"save_vm,omitempty"`
+	AccessType          *string   `json:"access_type,omitempty" bson:"access_type,omitempty"`
 }
 
-type ResourceValue struct {
-	Quantity *int     `json:"quantity,omitempty" bson:"quantity,omitempty"`
-	Amount   *float64 `json:"amount,omitempty" bson:"amount,omitempty"`
-	Unit     *string  `json:"unit,omitempty" bson:"unit,omitempty"`
+type RAM struct {
+	Amount float64 `json:"amount" bson:"amount"`
+	Unit   string  `json:"unit" bson:"unit"`
+}
+
+type HDD struct {
+	Amount float64 `json:"amount" bson:"amount"`
+	Unit   string  `json:"unit" bson:"unit"`
+}
+
+type Database struct {
+	Quantity int     `json:"quantity" bson:"quantity"`
+	Amount   float64 `json:"amount" bson:"amount"`
+	Unit     string  `json:"unit" bson:"unit"`
+}
+
+type BandWith struct {
+	Amount float64 `json:"amount" bson:"amount"`
+	Unit   string  `json:"unit" bson:"unit"`
+}
+
+type VPN struct {
+	IPAddress string `json:"ip_address" bson:"ip_address"`
+	Name      string `json:"name" bson:"name"`
+}
+
+type DNS struct {
+	Name string `json:"name" bson:"name"`
+	DNS  string `json:"dns" bson:"dns"`
 }
