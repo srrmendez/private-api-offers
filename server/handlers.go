@@ -164,8 +164,7 @@ func createOffers(w http.ResponseWriter, r *http.Request) {
 
 	var request model.BssSyncOfferRequest
 
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		pkgHttp.ErrorResponse(w, err, http.StatusBadRequest)
 		return
 	}

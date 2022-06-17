@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -49,7 +50,23 @@ func (s *service) Search(ctx context.Context, appID string, active *bool, catego
 }
 
 func (s *service) Sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) error {
-	return s.sync(context.Background(), appID, bssSyncOffer)
+	// TODO remove later
+	d, _ := json.MarshalIndent(bssSyncOffer, "", "\t")
+
+	msg := fmt.Sprintf("bss request : %s", d)
+
+	s.logger.Info(msg)
+	//
+
+	if err := s.sync(context.Background(), appID, bssSyncOffer); err != nil {
+		msg := fmt.Sprintf("[%s] syncing offers error [%s]", appID, err)
+
+		s.logger.Error(msg)
+
+		return err
+	}
+
+	return nil
 }
 
 func (s *service) sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) error {
