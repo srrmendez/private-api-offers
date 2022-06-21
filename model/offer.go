@@ -38,11 +38,13 @@ type Offer struct {
 
 	DataCenterResourceAttributtes *DataCenterResourceAttributtes `json:"data_center_resource_attributes,omitempty" bson:"data_center_resource_attributes,omitempty"`
 
+	Temporal bool `json:"temporal"`
+
 	EffectiveDate  string `json:"-" bson:"effective_date,omitempty"`
 	ExpirationDate string `json:"expiration_date,omitempty" bson:"expiration_date,omitempty"`
 
 	Fare            float64  `json:"fare,omitempty" bson:"fare,omitempty"`
-	ActivationFate  float64  `json:"activation_fare,omitempty" bson:"activation_fare,omitempty"`
+	ActivationFare  float64  `json:"activation_fare,omitempty" bson:"activation_fare,omitempty"`
 	Supplementaries []string `json:"supplementaries,omitempty" bson:"supplementaries,omitempty"`
 }
 

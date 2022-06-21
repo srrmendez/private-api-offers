@@ -181,7 +181,7 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 		ClientType:      model.IndividualClienType,
 		Paymentmode:     model.PostpaidPayMode,
 		Fare:            bssOffer.MontlyFee,
-		ActivationFate:  bssOffer.OneOfFee,
+		ActivationFare:  bssOffer.OneOfFee,
 		Supplementaries: []string{},
 	}
 
@@ -381,6 +381,11 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 				}
 
 				offer.DataCenterResourceAttributtes.SaveVM = &value
+
+			case "C_TEMPPREPAID_FLAG":
+				if attributte.Value == "1" {
+					offer.Temporal = true
+				}
 			}
 		}
 	}
