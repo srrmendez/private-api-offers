@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strconv"
+	"time"
 
 	"github.com/srrmendez/private-api-offers/conf"
 	"github.com/srrmendez/private-api-offers/model"
@@ -53,9 +55,9 @@ func (s *service) Sync(ctx context.Context, appID string, bssSyncOffer model.Bss
 	// TODO remove later
 	d, _ := json.MarshalIndent(bssSyncOffer, "", "\t")
 
-	msg := fmt.Sprintf("bss request : %s", d)
+	now := time.Now().Unix()
 
-	s.logger.Info(msg)
+	ioutil.WriteFile(fmt.Sprintf("/var/log/interface/api-offers/sync-%d.json", now), d, 0777)
 	//
 
 	if err := s.sync(context.Background(), appID, bssSyncOffer); err != nil {
@@ -151,7 +153,7 @@ func (s *service) syncSupplementaryOffer(ctx context.Context, bssOffer model.Bss
 		return s.supplementaryRepository.RemoveByExternalID(ctx, bssOffer.ID)
 	}
 
-	offer, err := s.repository.GetByExternalID(ctx, bssOffer.ID)
+	offer, err := s.supplementaryRepository.GetByExternalID(ctx, bssOffer.ID)
 	if err != nil {
 		return err
 	}
@@ -209,10 +211,11 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 			case "CN_ALIAS_NUM":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				d, err := strconv.Atoi(attributte.Value)
-				if err != nil {
-					return nil, err
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
+
+				d, _ := strconv.Atoi(attributte.Value)
 
 				offer.DataCenterResourceAttributtes.AliasQty = &d
 			case "C_BD_NUM":
@@ -220,10 +223,11 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.Database = s.checkDatabaseNil(offer.DataCenterResourceAttributtes.Database)
 
-				d, err := strconv.Atoi(attributte.Value)
-				if err != nil {
-					return nil, err
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
+
+				d, _ := strconv.Atoi(attributte.Value)
 
 				offer.DataCenterResourceAttributtes.Database.Quantity = d
 			case "CN_BD_SPACE":
@@ -231,10 +235,11 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.Database = s.checkDatabaseNil(offer.DataCenterResourceAttributtes.Database)
 
-				d, err := strconv.ParseFloat(attributte.Value, 64)
-				if err != nil {
-					return nil, err
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
+
+				d, _ := strconv.ParseFloat(attributte.Value, 64)
 
 				offer.DataCenterResourceAttributtes.Database.Amount = d
 			case "C_BD_SPACE_UNIT":
@@ -242,36 +247,47 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.Database = s.checkDatabaseNil(offer.DataCenterResourceAttributtes.Database)
 
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
+
 				offer.DataCenterResourceAttributtes.Database.Unit = attributte.Value
 			case "CN_CPU_NUM":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				d, err := strconv.Atoi(attributte.Value)
-				if err != nil {
-					return nil, err
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
+
+				d, _ := strconv.Atoi(attributte.Value)
 
 				offer.DataCenterResourceAttributtes.CPUQty = &d
 			case "CN_FTP_NUM":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				d, err := strconv.Atoi(attributte.Value)
-				if err != nil {
-					return nil, err
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
+
+				d, _ := strconv.Atoi(attributte.Value)
 
 				offer.DataCenterResourceAttributtes.FTPQty = &d
 			case "CN_PORT_NUM":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				d, err := strconv.Atoi(attributte.Value)
-				if err != nil {
-					return nil, err
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
+
+				d, _ := strconv.Atoi(attributte.Value)
 
 				offer.DataCenterResourceAttributtes.NetworkInterfaceQty = &d
 			case "CN_IP_NUM":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
 
 				offer.DataCenterResourceAttributtes.PublicIPAddress = &attributte.Value
 			case "CN_RAM_SPACE":
@@ -279,10 +295,11 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.RAM = s.checkRAMNil(offer.DataCenterResourceAttributtes.RAM)
 
-				d, err := strconv.ParseFloat(attributte.Value, 64)
-				if err != nil {
-					return nil, err
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
+
+				d, _ := strconv.ParseFloat(attributte.Value, 64)
 
 				offer.DataCenterResourceAttributtes.RAM.Amount = d
 			case "C_RAM_SPACE_UNIT":
@@ -290,22 +307,31 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.RAM = s.checkRAMNil(offer.DataCenterResourceAttributtes.RAM)
 
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
+
 				offer.DataCenterResourceAttributtes.RAM.Unit = attributte.Value
 			case "C_DISK_SPACE":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
 				offer.DataCenterResourceAttributtes.HDD = s.checkHDDNil(offer.DataCenterResourceAttributtes.HDD)
 
-				d, err := strconv.ParseFloat(attributte.Value, 64)
-				if err != nil {
-					return nil, err
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
+
+				d, _ := strconv.ParseFloat(attributte.Value, 64)
 
 				offer.DataCenterResourceAttributtes.HDD.Amount = d
 			case "C_DISK_SPACE_UNIT":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
 				offer.DataCenterResourceAttributtes.HDD = s.checkHDDNil(offer.DataCenterResourceAttributtes.HDD)
+
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
 
 				offer.DataCenterResourceAttributtes.HDD.Unit = attributte.Value
 
@@ -314,10 +340,11 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.Bandwidth = s.checkBandwithNil(offer.DataCenterResourceAttributtes.Bandwidth)
 
-				d, err := strconv.ParseFloat(attributte.Value, 64)
-				if err != nil {
-					return nil, err
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
+
+				d, _ := strconv.ParseFloat(attributte.Value, 64)
 
 				offer.DataCenterResourceAttributtes.Bandwidth.Amount = d
 
@@ -326,12 +353,20 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.Bandwidth = s.checkBandwithNil(offer.DataCenterResourceAttributtes.Bandwidth)
 
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
+
 				offer.DataCenterResourceAttributtes.Bandwidth.Unit = attributte.Value
 
 			case "CN_VPN_LANIP":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
 				offer.DataCenterResourceAttributtes.VPN = s.checkVPNNil(offer.DataCenterResourceAttributtes.VPN)
+
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
 
 				offer.DataCenterResourceAttributtes.VPN.IPAddress = attributte.Value
 
@@ -340,12 +375,20 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.VPN = s.checkVPNNil(offer.DataCenterResourceAttributtes.VPN)
 
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
+
 				offer.DataCenterResourceAttributtes.VPN.Name = attributte.Value
 
 			case "CN_DNS":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
 				offer.DataCenterResourceAttributtes.DNS = s.checkDNSNil(offer.DataCenterResourceAttributtes.DNS)
+
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
 
 				offer.DataCenterResourceAttributtes.DNS.DNS = attributte.Value
 
@@ -354,20 +397,42 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.DNS = s.checkDNSNil(offer.DataCenterResourceAttributtes.DNS)
 
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
+
 				offer.DataCenterResourceAttributtes.DNS.Name = attributte.Value
 
-			case "C_DATAC_ACCESS_TYPE":
+			case "C_ACCESS_TYPE":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				offer.DataCenterResourceAttributtes.AccessType = &attributte.Value
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
+
+				access := model.NationalAccess
+
+				if attributte.Value == "1" {
+					access = model.InternationalAccess
+				}
+
+				offer.DataCenterResourceAttributtes.AccessType = &access
 
 			case "CN_VPS_LANIP":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
 
 				offer.DataCenterResourceAttributtes.LANIPAddress = &attributte.Value
 
 			case "CN_VPS_WANIP":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
+				}
 
 				offer.DataCenterResourceAttributtes.WANIPAddress = &attributte.Value
 
@@ -378,6 +443,10 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				if attributte.Value == "1" {
 					value = true
+				}
+
+				if attributte.Type != "1" {
+					offer.DataCenterResourceAttributtes.Included = false
 				}
 
 				offer.DataCenterResourceAttributtes.SaveVM = &value
@@ -415,12 +484,35 @@ func (s *service) Get(ctx context.Context, id string, appID string) (*model.Offe
 }
 
 func (s *service) GetSecondaryOffers(ctx context.Context, ids []string) ([]model.Offer, error) {
-	return s.supplementaryRepository.GetByIDList(ctx, ids)
+	offers, err := s.supplementaryRepository.GetByIDList(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(offers) == len(ids) {
+		return offers, nil
+	}
+
+	nOffers := make([]model.Offer, 0, len(ids))
+
+	for i := range ids {
+		for j := range offers {
+			if ids[i] == *offers[j].ExternalID {
+				nOffers = append(nOffers, offers[j])
+
+				break
+			}
+		}
+	}
+
+	return nOffers, nil
 }
 
 func (s *service) checkDataCenterAttributesNil(v *model.DataCenterResourceAttributtes) *model.DataCenterResourceAttributtes {
 	if v == nil {
-		return &model.DataCenterResourceAttributtes{}
+		return &model.DataCenterResourceAttributtes{
+			Included: true,
+		}
 	}
 
 	return v

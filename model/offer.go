@@ -4,6 +4,7 @@ type ClientType string
 type PayModeType string
 type CategoryType string
 type OfferType string
+type AccessType string
 
 const (
 	IndividualClienType  ClientType = "INDIVIDUAL"
@@ -22,6 +23,9 @@ const (
 	OfferTypeHouseLeasing      OfferType = "HOUSE_LEASING"
 	OfferTypeDedicatedServer   OfferType = "DEDICATED_SERVER"
 	OfferTypeYellowPages       OfferType = "YELLOW_PAGES"
+
+	InternationalAccess AccessType = "INTERNATIONAL"
+	NationalAccess      AccessType = "NATIONAL"
 )
 
 type Offer struct {
@@ -49,21 +53,22 @@ type Offer struct {
 }
 
 type DataCenterResourceAttributtes struct {
-	RAM                 *RAM      `json:"ram,omitempty" bson:"ram,omitempty"`
-	HDD                 *HDD      `json:"hdd,omitempty" bson:"hdd,omitempty"`
-	CPUQty              *int      `json:"cpu_quantity,omitempty" bson:"cpu_quantity,omitempty"`
-	Database            *Database `json:"database,omitempty" bson:"database,omitempty"`
-	FTPQty              *int      `json:"ftp_quantity,omitempty" bson:"ftp_quantity,omitempty"`
-	AliasQty            *int      `json:"alias_quantity,omitempty" bson:"alias_quantity,omitempty"`
-	NetworkInterfaceQty *int      `json:"network_interface_qty,omitempty" bson:"network_interface_qty,omitempty"`
-	PublicIPAddress     *string   `json:"public_ip_address,omitempty" bson:"public_ip_address,omitempty"`
-	LANIPAddress        *string   `json:"lan_ip_address,omitempty" bson:"lan_ip_address,omitempty"`
-	WANIPAddress        *string   `json:"wan_ip_address,omitempty" bson:"wan_ip_address,omitempty"`
-	VPN                 *VPN      `json:"vpn,omitempty" bson:"vpn,omitempty"`
-	DNS                 *DNS      `json:"dns,omitempty" bson:"dns,omitempty"`
-	Bandwidth           *BandWith `json:"bandwidth,omitempty" bson:"bandwidth,omitempty"`
-	SaveVM              *bool     `json:"save_vm,omitempty" bson:"save_vm,omitempty"`
-	AccessType          *string   `json:"access_type,omitempty" bson:"access_type,omitempty"`
+	RAM                 *RAM        `json:"ram,omitempty" bson:"ram,omitempty"`
+	HDD                 *HDD        `json:"hdd,omitempty" bson:"hdd,omitempty"`
+	CPUQty              *int        `json:"cpu_quantity,omitempty" bson:"cpu_quantity,omitempty"`
+	Database            *Database   `json:"database,omitempty" bson:"database,omitempty"`
+	FTPQty              *int        `json:"ftp_quantity,omitempty" bson:"ftp_quantity,omitempty"`
+	AliasQty            *int        `json:"alias_quantity,omitempty" bson:"alias_quantity,omitempty"`
+	NetworkInterfaceQty *int        `json:"network_interface_qty,omitempty" bson:"network_interface_qty,omitempty"`
+	PublicIPAddress     *string     `json:"public_ip_address,omitempty" bson:"public_ip_address,omitempty"`
+	LANIPAddress        *string     `json:"lan_ip_address,omitempty" bson:"lan_ip_address,omitempty"`
+	WANIPAddress        *string     `json:"wan_ip_address,omitempty" bson:"wan_ip_address,omitempty"`
+	VPN                 *VPN        `json:"vpn,omitempty" bson:"vpn,omitempty"`
+	DNS                 *DNS        `json:"dns,omitempty" bson:"dns,omitempty"`
+	Bandwidth           *BandWith   `json:"bandwidth,omitempty" bson:"bandwidth,omitempty"`
+	SaveVM              *bool       `json:"save_vm,omitempty" bson:"save_vm,omitempty"`
+	AccessType          *AccessType `json:"access_type,omitempty" bson:"access_type,omitempty"`
+	Included            bool        `json:"included" bson:"included"`
 }
 
 type RAM struct {

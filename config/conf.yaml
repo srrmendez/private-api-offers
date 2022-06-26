@@ -1,7 +1,7 @@
 ---
 app:
     appPath: /offers
-    port: 8002
+    port: 8000
     #logAddress: /var/log/interface/api-offers/trace.log
     logAddress: ./trace.log
 
