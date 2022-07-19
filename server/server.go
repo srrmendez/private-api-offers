@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/srrmendez/private-api-offers/conf"
@@ -16,6 +17,7 @@ import (
 	"github.com/srrmendez/private-api-offers/service"
 	pkgHttp "github.com/srrmendez/services-interface-tools/pkg/http"
 	log "github.com/srrmendez/services-interface-tools/pkg/logger"
+	"github.com/srrmendez/services-interface-tools/pkg/tracking"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/swaggo/swag/example/basic/docs"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -66,8 +68,10 @@ func Init() {
 	supplementaryRepository := repository.NewRepository(mongoClient, conf.GetProps().Database.Database,
 		conf.GetProps().Database.SupplementaryTable)
 
+	trackingClient := tracking.NewRestTracking(resty.New(), conf.GetProps().PrivateApiTracking.Host, lg)
+
 	env = Env{
-		offerService: service.NewService(offerRepository, supplementaryRepository, lg, conf.GetProps().Categories),
+		offerService: service.NewService(offerRepository, supplementaryRepository, lg, conf.GetProps().Categories, trackingClient),
 	}
 
 	// Creating http logger

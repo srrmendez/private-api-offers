@@ -32,3 +32,17 @@ categories:
     10:
         type: YELLOW_PAGES
         category: YELLOW_PAGES
+    11:
+        type: DNS
+        category: DATACENTER
+    12:
+        type: ACCESS
+        category: DATACENTER
+    13:
+        type: VPN
+        category: DATACENTER
+        
+privateApiTracking:
+    #host: https://service-layer.private.etecsa.cu/offers
+    host: http://localhost:8002/trackings/v1/
+    # host: http://localhost:8000/offers

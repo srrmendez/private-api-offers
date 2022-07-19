@@ -3,25 +3,26 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"strconv"
-	"time"
 
 	"github.com/srrmendez/private-api-offers/conf"
 	"github.com/srrmendez/private-api-offers/model"
 	"github.com/srrmendez/private-api-offers/repository"
 	log "github.com/srrmendez/services-interface-tools/pkg/logger"
+	"github.com/srrmendez/services-interface-tools/pkg/tracking"
 )
 
 func NewService(repository repository.OfferRepository, supplementary repository.OfferRepository, logger log.Log,
-	confCategories map[string]conf.Category,
+	confCategories map[string]conf.Category, trackingClient tracking.TrackingClient,
 ) *service {
 	return &service{
 		repository:              repository,
 		supplementaryRepository: supplementary,
 		logger:                  logger,
 		confCategories:          confCategories,
+		trackingClient:          trackingClient,
 	}
 }
 
@@ -52,13 +53,19 @@ func (s *service) Search(ctx context.Context, appID string, active *bool, catego
 }
 
 func (s *service) Sync(ctx context.Context, appID string, bssSyncOffer model.BssSyncOfferRequest) error {
-	// TODO remove later
-	d, _ := json.MarshalIndent(bssSyncOffer, "", "\t")
+	d, _ := json.Marshal(bssSyncOffer)
 
-	now := time.Now().Unix()
-
-	ioutil.WriteFile(fmt.Sprintf("/var/log/interface/api-offers/sync-%d.json", now), d, 0777)
-	//
+	s.trackingClient.Send(tracking.Request{
+		TrackingID:  tracking.NewTrackingID(),
+		Source:      "BSS",
+		Flow:        "SYNC_OFFERS",
+		ContentType: tracking.JSONContent,
+		Action:      tracking.ActionRequest,
+		Message: &tracking.Message{
+			Endpoint: "",
+			Body:     string(d),
+		},
+	})
 
 	if err := s.sync(context.Background(), appID, bssSyncOffer); err != nil {
 		msg := fmt.Sprintf("[%s] syncing offers error [%s]", appID, err)
@@ -201,13 +208,15 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 	if bssOffer.Attributes != nil && len((*bssOffer.Attributes).Attribute) > 0 {
 		for _, attributte := range (*bssOffer.Attributes).Attribute {
-			if v, ok := s.confCategories[attributte.Value]; ok {
-				offer.Category = v.Category
-				offer.Type = v.Type
-				continue
-			}
-
 			switch attributte.Code {
+			case "C_PH2_SERVICE_TYPE":
+				if _, ok := s.confCategories[attributte.Value]; !ok {
+					return nil, errors.New("service type cannot be founded")
+				}
+
+				offer.Category = s.confCategories[attributte.Value].Category
+				offer.Type = s.confCategories[attributte.Value].Type
+
 			case "CN_ALIAS_NUM":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
@@ -252,6 +261,11 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 				}
 
 				offer.DataCenterResourceAttributtes.Database.Unit = attributte.Value
+
+				if offer.DataCenterResourceAttributtes.Database.Unit == "" {
+					offer.DataCenterResourceAttributtes.Database.Unit = "MB"
+				}
+
 			case "CN_CPU_NUM":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
@@ -312,6 +326,11 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 				}
 
 				offer.DataCenterResourceAttributtes.RAM.Unit = attributte.Value
+
+				if offer.DataCenterResourceAttributtes.RAM.Unit == "" {
+					offer.DataCenterResourceAttributtes.RAM.Unit = "MB"
+				}
+
 			case "C_DISK_SPACE":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
@@ -335,10 +354,14 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				offer.DataCenterResourceAttributtes.HDD.Unit = attributte.Value
 
+				if offer.DataCenterResourceAttributtes.HDD.Unit == "" {
+					offer.DataCenterResourceAttributtes.HDD.Unit = "MB"
+				}
+
 			case "C_RATE_NUM":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				offer.DataCenterResourceAttributtes.Bandwidth = s.checkBandwithNil(offer.DataCenterResourceAttributtes.Bandwidth)
+				isVPN := s.checkifAccessTypeisVPN((*bssOffer.Attributes).Attribute)
 
 				if attributte.Type != "1" {
 					offer.DataCenterResourceAttributtes.Included = false
@@ -346,18 +369,42 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 
 				d, _ := strconv.ParseFloat(attributte.Value, 64)
 
+				if isVPN {
+					offer.DataCenterResourceAttributtes.VPN = s.checkVPNNil(offer.DataCenterResourceAttributtes.VPN)
+
+					offer.DataCenterResourceAttributtes.VPN.Speed = d
+
+					break
+				}
+
+				offer.DataCenterResourceAttributtes.Bandwidth = s.checkBandwithNil(offer.DataCenterResourceAttributtes.Bandwidth)
+
 				offer.DataCenterResourceAttributtes.Bandwidth.Amount = d
 
 			case "C_RATE_UNIT":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
-				offer.DataCenterResourceAttributtes.Bandwidth = s.checkBandwithNil(offer.DataCenterResourceAttributtes.Bandwidth)
+				isVPN := s.checkifAccessTypeisVPN((*bssOffer.Attributes).Attribute)
 
 				if attributte.Type != "1" {
 					offer.DataCenterResourceAttributtes.Included = false
 				}
 
+				if isVPN {
+					offer.DataCenterResourceAttributtes.VPN = s.checkVPNNil(offer.DataCenterResourceAttributtes.VPN)
+
+					offer.DataCenterResourceAttributtes.VPN.Unit = attributte.Value
+
+					break
+				}
+
+				offer.DataCenterResourceAttributtes.Bandwidth = s.checkBandwithNil(offer.DataCenterResourceAttributtes.Bandwidth)
+
 				offer.DataCenterResourceAttributtes.Bandwidth.Unit = attributte.Value
+
+				if offer.DataCenterResourceAttributtes.Bandwidth.Unit == "" {
+					offer.DataCenterResourceAttributtes.Bandwidth.Unit = "MB"
+				}
 
 			case "CN_VPN_LANIP":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
@@ -406,6 +453,8 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 			case "C_ACCESS_TYPE":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
 
+				offer.DataCenterResourceAttributtes.Bandwidth = s.checkBandwithNil(offer.DataCenterResourceAttributtes.Bandwidth)
+
 				if attributte.Type != "1" {
 					offer.DataCenterResourceAttributtes.Included = false
 				}
@@ -416,7 +465,7 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 					access = model.InternationalAccess
 				}
 
-				offer.DataCenterResourceAttributtes.AccessType = &access
+				offer.DataCenterResourceAttributtes.Bandwidth.Type = access
 
 			case "CN_VPS_LANIP":
 				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
@@ -455,6 +504,23 @@ func (s *service) mapBssOfferToOffer(bssOffer model.BssOffer) (*model.Offer, err
 				if attributte.Value == "1" {
 					offer.Temporal = true
 				}
+
+			case "amount":
+				d, _ := strconv.ParseFloat(attributte.Value, 64)
+
+				offer.Fare = d
+
+			case "measureId":
+				currency := "CUP"
+
+				offer.Currency = &currency
+
+			case "C_PROTOCOLO_PUERTO":
+				offer.DataCenterResourceAttributtes = s.checkDataCenterAttributesNil(offer.DataCenterResourceAttributtes)
+
+				offer.DataCenterResourceAttributtes.Port = s.checkPortNil(offer.DataCenterResourceAttributtes.Port)
+
+				offer.DataCenterResourceAttributtes.Port.Description = attributte.Value
 			}
 		}
 	}
@@ -561,6 +627,24 @@ func (s *service) checkHDDNil(v *model.HDD) *model.HDD {
 func (s *service) checkBandwithNil(v *model.BandWith) *model.BandWith {
 	if v == nil {
 		return &model.BandWith{}
+	}
+
+	return v
+}
+
+func (s *service) checkifAccessTypeisVPN(atts []model.BssAttribute) bool {
+	for i := range atts {
+		if atts[i].Code == "C_DATAC_ACCESS_TYPE" && atts[i].Value == "VPN" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *service) checkPortNil(v *model.Port) *model.Port {
+	if v == nil {
+		return &model.Port{}
 	}
 
 	return v

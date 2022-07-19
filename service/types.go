@@ -7,6 +7,7 @@ import (
 	"github.com/srrmendez/private-api-offers/model"
 	"github.com/srrmendez/private-api-offers/repository"
 	log "github.com/srrmendez/services-interface-tools/pkg/logger"
+	"github.com/srrmendez/services-interface-tools/pkg/tracking"
 )
 
 type OfferService interface {
@@ -21,4 +22,5 @@ type service struct {
 	repository              repository.OfferRepository
 	supplementaryRepository repository.OfferRepository
 	confCategories          map[string]conf.Category
+	trackingClient          tracking.TrackingClient
 }

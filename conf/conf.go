@@ -42,5 +42,8 @@ type Properties struct {
 		Table              string `yaml:"table"`
 		SupplementaryTable string `yaml:"supplementaryTable"`
 	} `yaml:"database"`
-	Categories map[string]Category `yaml:"categories"`
+	Categories         map[string]Category `yaml:"categories"`
+	PrivateApiTracking struct {
+		Host string `yaml:"host"`
+	} `yaml:"privateApiTracking"`
 }
